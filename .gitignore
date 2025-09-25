@@ -1,0 +1,16 @@
+.env
+
+# media
+**/media
+
+# log
+**/logs
+
+# ldap config file
+ldap.config.json
+
+# package-lock
+**/package-lock.json
+
+# dependencies
+**/node_modules

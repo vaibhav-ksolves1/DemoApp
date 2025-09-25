@@ -1,0 +1,35 @@
+{
+  "name": "demoapp",
+  "version": "1.0.0",
+  "description": "application for setting up the infra for DFM demo trials",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/interfaces/http/server.js",
+    "dev": "nodemon src/interfaces/http/server.js",
+    "db:push": "npx sequelize-cli db:migrate --config sequelize.config.js",
+    "db:rollback": "npx sequelize-cli db:migrate:undo  --config sequelize.config.js",
+    "db:seed": "npx sequelize-cli db:seed:all --config sequelize.config.js",
+    "db:seed:create": "npx sequelize-cli seed:generate --name",
+    "db:create": "npx sequelize-cli migration:generate --name"
+  },
+  "keywords": [
+    "DFM",
+    "DEMO"
+  ],
+  "author": "vaibhav-dhakad",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "nodemailer": "^7.0.6",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "sequelize-cli": "^6.6.3"
+  }
+}
