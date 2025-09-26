@@ -1,0 +1,19 @@
+# Ignore node modules and build directories
+**/node_modules/
+**/dist/
+**/build/
+**/logs/
+
+*.log
+*.tmp
+
+**/temp/
+
+# Environment variables
+.env
+
+# Build output
+dist/
+
+# Terraform files
+**/infraRegistrations
