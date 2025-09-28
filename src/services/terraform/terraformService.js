@@ -5,6 +5,9 @@ import util from 'util';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
+import MailService from '../email/mailService.js';
+const mailService = new MailService();
+
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,7 +41,7 @@ export default class TerraformService {
 
       // Generate dynamic main.tf per registration
       const mainTf = `
-module "registration_infra" {
+  module "registration_infra" {
   source          = "${this.baseDir.replace(/\\/g, '/')}"
   registration_id = "${registrationId}"
 }
@@ -70,6 +73,13 @@ module "registration_infra" {
       const instanceUrl = urlMatch
         ? urlMatch[1]
         : `http://ec2-instance-${registrationId}.amazonaws.com`;
+
+      // send notification email
+      await mailService.sendInstanceReadyMail(
+        'user@example.com',
+        instanceUrl,
+        registrationId
+      );
 
       return instanceUrl;
     } catch (err) {

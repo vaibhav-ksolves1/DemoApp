@@ -26,6 +26,14 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
+      trial_email_sent_days: {
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
+        allowNull: false,
+        // track sent reminders
+        defaultValue: [],
+        comment:
+          'Tracks which trial reminder emails have been sent (e.g., 5, 2, 1 days before expiry)',
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
