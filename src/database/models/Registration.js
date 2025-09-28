@@ -29,6 +29,12 @@ Registration.init(
       comment:
         'Tracks which trial reminder emails have been sent (e.g., 5, 2, 1 days before expiry)',
     },
+    infra_setup_done: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Indicates whether Terraform infrastructure has been successfully provisioned',
+    },
   },
   {
     sequelize,

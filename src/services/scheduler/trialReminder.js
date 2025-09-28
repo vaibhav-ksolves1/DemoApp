@@ -4,43 +4,65 @@ import { REMINDER_DAYS } from '../../shared/constants/appConstants.js';
 import 'dotenv/config';
 import schedule from 'node-schedule';
 
-const mailService = new MailService();
+export default class TrialReminderService {
+  constructor() {
+    this.mailService = new MailService();
+    this.trialDays = parseInt(process.env.TRIAL_DAYS || 7, 10);
 
-const daysUntilExpiry = (createdAt) => {
-  const expiryDate = new Date(createdAt);
-  expiryDate.setDate(
-    expiryDate.getDate() + parseInt(process.env.TRIAL_DAYS || 7, 10)
-  );
-  const today = new Date();
-  return Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-};
+    // Immediately schedule reminders on server start
+    this.runScheduler();
 
-export const processTrialReminders = async () => {
-  console.log('🕒 Running trial reminder check...');
-  try {
-    const registrations = await Registration.findAll();
-
-    for (const reg of registrations) {
-      const remainingDays = daysUntilExpiry(reg.created_at);
-
-      if (
-        REMINDER_DAYS.includes(remainingDays) &&
-        !(reg.trial_email_sent_days || []).includes(remainingDays)
-      ) {
-        await mailService.sendTrialReminder(reg.email, remainingDays);
-        await reg.update({
-          trial_email_sent_days: [...(reg.trial_email_sent_days || []), remainingDays],
-        });
-        console.log(`📧 Sent reminder to ${reg.email} (${remainingDays} days left)`);
-      }
-    }
-  } catch (err) {
-    console.error('❌ Error processing trial reminders:', err);
+    // Schedule cron daily at 2 PM
+    schedule.scheduleJob('0 14 * * *', () => this.runScheduler());
   }
-};
 
-// Run immediately on server start
-processTrialReminders();
+  // Returns the exact date when a reminder should be sent
+  getReminderDate(createdAt, daysBeforeExpiry) {
+    const expiryDate = new Date(createdAt);
+    expiryDate.setDate(expiryDate.getDate() + this.trialDays - daysBeforeExpiry);
+    expiryDate.setHours(13, 59, 0, 0); // Set reminder time to 1:59 PM
+    return expiryDate;
+  }
 
-// Schedule daily at 8 AM
-schedule.scheduleJob('0 8 * * *', processTrialReminders);
+  // Schedule reminders for a single registration
+  scheduleRemindersForRegistration(reg) {
+    REMINDER_DAYS.forEach((daysLeft) => {
+      if ((reg.trial_email_sent_days || []).includes(daysLeft)) return;
+
+      const reminderTime = this.getReminderDate(reg.created_at, daysLeft);
+
+      if (reminderTime > new Date()) {
+        schedule.scheduleJob(reminderTime, async () => {
+          try {
+            await this.mailService.sendTrialReminder(reg.email, daysLeft);
+            const updatedDays = [...(reg.trial_email_sent_days || []), daysLeft];
+            await reg.update({ trial_email_sent_days: updatedDays });
+            console.log(
+              `📧 Sent reminder to ${reg.email} (${daysLeft} days left) at ${reminderTime}`
+            );
+          } catch (err) {
+            console.error(
+              `❌ Failed to send reminder for ${reg.email} (${daysLeft} days left):`,
+              err
+            );
+          }
+        });
+
+        console.log(
+          `⏱ Scheduled reminder for ${reg.email} (${daysLeft} days left) at ${reminderTime}`
+        );
+      }
+    });
+  }
+
+  // Scheduler to run daily and queue reminders
+  async runScheduler() {
+    console.log('🕒 Running trial reminder scheduler...');
+    try {
+      const registrations = await Registration.findAll();
+      registrations.forEach((reg) => this.scheduleRemindersForRegistration(reg));
+    } catch (err) {
+      console.error('❌ Error in trial reminder scheduler:', err);
+    }
+  }
+}

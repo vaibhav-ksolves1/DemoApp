@@ -29,10 +29,15 @@ module.exports = {
       trial_email_sent_days: {
         type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull: false,
-        // track sent reminders
         defaultValue: [],
         comment:
           'Tracks which trial reminder emails have been sent (e.g., 5, 2, 1 days before expiry)',
+      },
+      infra_setup_done: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: 'Indicates whether Terraform infrastructure has been successfully provisioned',
       },
       created_at: {
         allowNull: false,
