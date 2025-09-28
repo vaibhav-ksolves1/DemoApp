@@ -3,6 +3,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { fileURLToPath } from 'url';
+import 'dotenv/config';
 
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -10,19 +11,17 @@ const __dirname = path.dirname(__filename);
 
 export default class TerraformService {
   constructor() {
-    this.baseDir = path.join(__dirname, 'base'); // all Terraform files live here
-    this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration working dirs
+    this.baseDir = path.join(__dirname, 'base'); // shared Terraform module
+    this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration dirs
   }
 
   async provisionInfrastructure(registrationId) {
     const registrationDir = path.join(this.infraDir, String(registrationId));
 
     try {
-      console.log(
-        `🚀 Start provisioning infra for registration ${registrationId}`
-      );
+      console.log(`🚀 Provisioning infra for registration ${registrationId}`);
 
-      // Ensure registration dir exists
+      // Ensure folder exists
       if (!fs.existsSync(registrationDir)) {
         fs.mkdirSync(registrationDir, { recursive: true });
         console.log(
@@ -37,31 +36,36 @@ export default class TerraformService {
         fs.copyFileSync(src, dest);
       }
 
-      // const stateFile = path.join(registrationDir, 'terraform.tfstate');
+      // Generate dynamic main.tf per registration
+      const mainTf = `
+module "registration_infra" {
+  source          = "${this.baseDir.replace(/\\/g, '/')}"
+  registration_id = "${registrationId}"
+}
+`;
+      fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
 
+      // Run Terraform commands
       const runTerraform = async cmd => {
         console.log(`🔧 Running terraform ${cmd}...`);
-        const { stdout, stderr } = await execAsync(
-          `terraform ${cmd} -var-file="aws_creds.tfvars"`,
-          { cwd: registrationDir, env: { ...process.env } }
-        );
+        const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
+          cwd: registrationDir,
+          env: { ...process.env }, // picks up AWS creds & TF_VAR_* automatically
+        });
         if (stderr) console.error(stderr);
         return stdout;
       };
 
-      // Terraform init
       const initOut = await runTerraform('init -input=false');
       console.log(`✅ Terraform init:\n${initOut}`);
 
-      // Terraform plan
       const planOut = await runTerraform('plan -input=false');
       console.log(`📋 Terraform plan:\n${planOut}`);
 
-      // Terraform apply
       const applyOut = await runTerraform('apply -input=false -auto-approve');
       console.log(`⚡ Terraform apply:\n${applyOut}`);
 
-      // Extract URL (from outputs)
+      // Extract dfm_url output
       const urlMatch = applyOut.match(/dfm_url\s*=\s*"(.+?)"/);
       const instanceUrl = urlMatch
         ? urlMatch[1]
