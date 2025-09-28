@@ -1,8 +1,10 @@
 import express from 'express';
 import routes from './routes/index.js';
-import {errorMiddleware} from './shared/errors/index.js';
+import { errorMiddleware } from './shared/errors/index.js';
 import logger from './shared/logger/index.js';
 import { endpoints } from './shared/constants/index.js';
+
+import './services/scheduler/trialReminder.js';
 
 export default class App {
   constructor({ port }) {
