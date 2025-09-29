@@ -41,7 +41,7 @@ export default class MailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Mail sent:', info.messageId);
+      console.log('✅ Mail sent:', info.messageId, recipientEmail);
     } catch (err) {
       console.error('❌ Failed to send mail:', err);
     }

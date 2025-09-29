@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 import MailService from '../email/mailService.js';
-const mailService = new MailService();
+import Registration from '../../database/models/Registration.js';
 
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +16,7 @@ export default class TerraformService {
   constructor() {
     this.baseDir = path.join(__dirname, 'base'); // shared Terraform module
     this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration dirs
+    this.mailService = new MailService();
   }
 
   async provisionInfrastructure(registrationId) {
@@ -32,56 +33,92 @@ export default class TerraformService {
         );
       }
 
-      // Copy all base files to registration folder
+      // Copy all base module files
       for (const file of fs.readdirSync(this.baseDir)) {
         const src = path.join(this.baseDir, file);
         const dest = path.join(registrationDir, file);
         fs.copyFileSync(src, dest);
       }
 
-      // Generate dynamic main.tf per registration
+      // Generate dynamic root main.tf
       const mainTf = `
-  module "registration_infra" {
+module "registration_infra" {
   source          = "${this.baseDir.replace(/\\/g, '/')}"
   registration_id = "${registrationId}"
+}
+
+# Re-export module outputs so terraform output -json works
+output "dfm_public_ip" {
+  value = module.registration_infra.dfm_public_ip
+}
+
+output "dfm_url" {
+  value = module.registration_infra.dfm_url
 }
 `;
       fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
 
-      // Run Terraform commands
+      // Helper to run Terraform commands
       const runTerraform = async cmd => {
         console.log(`🔧 Running terraform ${cmd}...`);
-        const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
-          cwd: registrationDir,
-          env: { ...process.env }, // picks up AWS creds & TF_VAR_* automatically
-        });
-        if (stderr) console.error(stderr);
-        return stdout;
+        try {
+          const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
+            cwd: registrationDir,
+            env: { ...process.env },
+            maxBuffer: 1024 * 1024, // 1 MB
+          });
+          if (stderr) console.log('ℹ️ Terraform info:', stderr);
+          return stdout;
+        } catch (err) {
+          console.error('❌ Terraform command failed:', err);
+          throw err;
+        }
       };
 
-      const initOut = await runTerraform('init -input=false');
-      console.log(`✅ Terraform init:\n${initOut}`);
+      // Run Terraform workflow
+      await runTerraform('init -input=false');
+      await runTerraform('plan -input=false');
+      await runTerraform('apply -input=false -auto-approve');
 
-      const planOut = await runTerraform('plan -input=false');
-      console.log(`📋 Terraform plan:\n${planOut}`);
+      // Get outputs as JSON
+      // Get outputs as JSON
+      const outputJson = await runTerraform('output -json');
+      let dfmUrl = '';
+      try {
+        const outputs = JSON.parse(outputJson);
+        if (outputs.dfm_url?.value) {
+          dfmUrl = outputs.dfm_url.value;
+        } else {
+          console.warn(
+            '⚠️ dfm_url not found in Terraform outputs, using fallback'
+          );
+          dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+        }
+        console.log('🌐 DFM URL:', dfmUrl);
+      } catch (err) {
+        console.warn('⚠️ Could not parse terraform outputs JSON:', err);
+        dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+      }
 
-      const applyOut = await runTerraform('apply -input=false -auto-approve');
-      console.log(`⚡ Terraform apply:\n${applyOut}`);
+      // Update registration and send email
+      const registration = await Registration.findByPk(registrationId);
+      if (registration) {
+        await registration.update({ infra_setup_done: true });
 
-      // Extract dfm_url output
-      const urlMatch = applyOut.match(/dfm_url\s*=\s*"(.+?)"/);
-      const instanceUrl = urlMatch
-        ? urlMatch[1]
-        : `http://ec2-instance-${registrationId}.amazonaws.com`;
+        await this.mailService.sendInstanceReadyMail(
+          registration.email,
+          dfmUrl, // only send dfm_url
+          registrationId
+        );
 
-      // send notification email
-      await mailService.sendInstanceReadyMail(
-        'user@example.com',
-        instanceUrl,
-        registrationId
-      );
+        console.log(
+          `📧 Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
+        );
+      } else {
+        console.warn(`⚠️ Registration with ID ${registrationId} not found`);
+      }
 
-      return instanceUrl;
+      return dfmUrl;
     } catch (err) {
       console.error(
         `❌ Terraform failed for registration ${registrationId}:`,
