@@ -7,10 +7,10 @@ import { errorMiddleware } from './shared/errors/index.js';
 import logger from './shared/logger/index.js';
 import { endpoints } from './shared/constants/index.js';
 
+import './services/scheduler/trialReminder.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-import './services/scheduler/trialReminder.js';
 
 export default class App {
   constructor({ port }) {
@@ -25,13 +25,13 @@ export default class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
 
-    // ✅ Set EJS as view engine
+    // Set EJS as view engine
     this.app.set('view engine', 'ejs');
 
-    // ✅ Set views directory
+    // Set views directory
     this.app.set('views', path.join(__dirname, 'shared/templates/email'));
 
-    // ✅ Serve static files (icons, css, etc.)
+    // Serve static files (icons, css, etc.)
     this.app.use(express.static(path.join(__dirname, 'public')));
   }
 

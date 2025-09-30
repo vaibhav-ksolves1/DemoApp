@@ -3,6 +3,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { fileURLToPath } from 'url';
+
 import 'dotenv/config';
 
 import MailService from '../email/mailService.js';
@@ -18,6 +19,9 @@ export default class TerraformService {
     this.baseDir = path.join(__dirname, 'base'); // shared Terraform module
     this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration dirs
     this.mailService = new MailService();
+
+    this.baseDir = path.join(__dirname, 'base'); // all Terraform files live here
+    this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration working dirs
   }
 
   async provisionInfrastructure(registrationId) {
@@ -33,6 +37,20 @@ export default class TerraformService {
       }
 
       // Copy all base module files
+
+      console.log(
+        `🚀 Start provisioning infra for registration ${registrationId}`
+      );
+
+      // Ensure registration dir exists
+      if (!fs.existsSync(registrationDir)) {
+        fs.mkdirSync(registrationDir, { recursive: true });
+        console.log(
+          `📂 Created infra folder for registration ${registrationId}`
+        );
+      }
+
+      // Copy all base files to registration folder
       for (const file of fs.readdirSync(this.baseDir)) {
         const src = path.join(this.baseDir, file);
         const dest = path.join(registrationDir, file);
@@ -132,6 +150,13 @@ output "dfm_url" {
     } catch (err) {
       console.error(
         `Terraform failed for registration ${registrationId}:`,
+        err
+      );
+
+      // const stateFile = path.join(registrationDir, 'terraform.tfstate');
+
+      console.error(
+        `❌ Terraform failed for registration ${registrationId}:`,
         err.stderr || err
       );
       throw err;
