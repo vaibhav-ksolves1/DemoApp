@@ -7,6 +7,7 @@ import 'dotenv/config';
 
 import MailService from '../email/mailService.js';
 import Registration from '../../database/models/Registration.js';
+import { bootstrap } from '../bootstrap/index.js';
 
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -23,14 +24,12 @@ export default class TerraformService {
     const registrationDir = path.join(this.infraDir, String(registrationId));
 
     try {
-      console.log(`🚀 Provisioning infra for registration ${registrationId}`);
+      console.log(`Provisioning infra for registration ${registrationId}`);
 
       // Ensure folder exists
       if (!fs.existsSync(registrationDir)) {
         fs.mkdirSync(registrationDir, { recursive: true });
-        console.log(
-          `📂 Created infra folder for registration ${registrationId}`
-        );
+        console.log(`Created infra folder for registration ${registrationId}`);
       }
 
       // Copy all base module files
@@ -60,17 +59,17 @@ output "dfm_url" {
 
       // Helper to run Terraform commands
       const runTerraform = async cmd => {
-        console.log(`🔧 Running terraform ${cmd}...`);
+        console.log(`Running terraform ${cmd}...`);
         try {
           const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
             cwd: registrationDir,
             env: { ...process.env },
             maxBuffer: 1024 * 1024, // 1 MB
           });
-          if (stderr) console.log('ℹ️ Terraform info:', stderr);
+          if (stderr) console.log('Terraform info:', stderr);
           return stdout;
         } catch (err) {
-          console.error('❌ Terraform command failed:', err);
+          console.error('Terraform command failed:', err);
           throw err;
         }
       };
@@ -84,21 +83,29 @@ output "dfm_url" {
       // Get outputs as JSON
       const outputJson = await runTerraform('output -json');
       let dfmUrl = '';
+      let nifiUrl = '';
+      let registryUrl = '';
       try {
         const outputs = JSON.parse(outputJson);
         if (outputs.dfm_url?.value) {
           dfmUrl = outputs.dfm_url.value;
         } else {
           console.warn(
-            '⚠️ dfm_url not found in Terraform outputs, using fallback'
+            'dfm_url not found in Terraform outputs, using fallback'
           );
           dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
         }
-        console.log('🌐 DFM URL:', dfmUrl);
+        if (outputs.dfm_public_ip?.value) {
+          nifiUrl = `http://${outputs.dfm_public_ip.value}:8080/nifi`;
+          registryUrl = `http://${outputs.dfm_public_ip.value}:18080/nifi-registry`;
+        }
+        console.log('DFM URL:', dfmUrl);
       } catch (err) {
-        console.warn('⚠️ Could not parse terraform outputs JSON:', err);
+        console.warn('Could not parse terraform outputs JSON:', err);
         dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
       }
+
+      await bootstrap({ nifiUrl, dfmUrl, registryUrl });
 
       // Update registration and send email
       const registration = await Registration.findByPk(registrationId);
@@ -107,21 +114,24 @@ output "dfm_url" {
 
         await this.mailService.sendInstanceReadyMail(
           registration.email,
-          dfmUrl, // only send dfm_url
-          registrationId
+          dfmUrl,
+          nifiUrl,
+          registryUrl,
+          registrationId,
+          registration
         );
 
         console.log(
-          `📧 Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
+          `Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
         );
       } else {
-        console.warn(`⚠️ Registration with ID ${registrationId} not found`);
+        console.warn(`Registration with ID ${registrationId} not found`);
       }
 
       return dfmUrl;
     } catch (err) {
       console.error(
-        `❌ Terraform failed for registration ${registrationId}:`,
+        `Terraform failed for registration ${registrationId}:`,
         err.stderr || err
       );
       throw err;
