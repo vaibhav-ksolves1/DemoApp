@@ -1,6 +1,6 @@
 // src/database/models/Registration.js
-
 import { DataTypes, Model } from 'sequelize';
+import sequelize from '../../shared/db.js';
 import sequelize from '../../shared/db.js';
 
 class Registration extends Model {}
