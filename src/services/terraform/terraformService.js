@@ -4,73 +4,140 @@ import { exec } from 'child_process';
 import util from 'util';
 import { fileURLToPath } from 'url';
 
+import 'dotenv/config';
+
+import MailService from '../email/mailService.js';
+import Registration from '../../database/models/Registration.js';
+import { bootstrap } from '../bootstrap/index.js';
+import 'dotenv/config';
+
+import MailService from '../email/mailService.js';
+import Registration from '../../database/models/Registration.js';
+import { bootstrap } from '../bootstrap/index.js';
+
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default class TerraformService {
   constructor() {
-    this.baseDir = path.join(__dirname, 'base'); // all Terraform files live here
-    this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration working dirs
+    this.baseDir = path.join(__dirname, 'base'); // shared Terraform module
+    this.infraDir = path.join(__dirname, '../../infraRegistrations'); // per-registration dirs
+    this.mailService = new MailService();
   }
 
   async provisionInfrastructure(registrationId) {
     const registrationDir = path.join(this.infraDir, String(registrationId));
 
     try {
-      console.log(
-        `🚀 Start provisioning infra for registration ${registrationId}`
-      );
+      console.log(`Provisioning infra for registration ${registrationId}`);
 
-      // Ensure registration dir exists
+      // Ensure folder exists
       if (!fs.existsSync(registrationDir)) {
         fs.mkdirSync(registrationDir, { recursive: true });
-        console.log(
-          `📂 Created infra folder for registration ${registrationId}`
-        );
+        console.log(`Created infra folder for registration ${registrationId}`);
       }
 
-      // Copy all base files to registration folder
+      // Copy all base module files
       for (const file of fs.readdirSync(this.baseDir)) {
         const src = path.join(this.baseDir, file);
         const dest = path.join(registrationDir, file);
         fs.copyFileSync(src, dest);
       }
 
-      // const stateFile = path.join(registrationDir, 'terraform.tfstate');
+      // Generate dynamic root main.tf
+      const mainTf = `
+module "registration_infra" {
+  source          = "${this.baseDir.replace(/\\/g, '/')}"
+  registration_id = "${registrationId}"
+}
 
+# Re-export module outputs so terraform output -json works
+output "dfm_public_ip" {
+  value = module.registration_infra.dfm_public_ip
+}
+
+output "dfm_url" {
+  value = module.registration_infra.dfm_url
+}
+`;
+      fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
+
+      // Helper to run Terraform commands
       const runTerraform = async cmd => {
-        console.log(`🔧 Running terraform ${cmd}...`);
-        const { stdout, stderr } = await execAsync(
-          `terraform ${cmd} -var-file="aws_creds.tfvars"`,
-          { cwd: registrationDir, env: { ...process.env } }
-        );
-        if (stderr) console.error(stderr);
-        return stdout;
+        console.log(`Running terraform ${cmd}...`);
+        try {
+          const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
+            cwd: registrationDir,
+            env: { ...process.env },
+            maxBuffer: 1024 * 1024, // 1 MB
+          });
+          if (stderr) console.log('Terraform info:', stderr);
+          return stdout;
+        } catch (err) {
+          console.error('Terraform command failed:', err);
+          throw err;
+        }
       };
 
-      // Terraform init
-      const initOut = await runTerraform('init -input=false');
-      console.log(`✅ Terraform init:\n${initOut}`);
+      // Run Terraform workflow
+      await runTerraform('init -input=false');
+      await runTerraform('plan -input=false');
+      await runTerraform('apply -input=false -auto-approve');
 
-      // Terraform plan
-      const planOut = await runTerraform('plan -input=false');
-      console.log(`📋 Terraform plan:\n${planOut}`);
+      // Get outputs as JSON
+      // Get outputs as JSON
+      const outputJson = await runTerraform('output -json');
+      let dfmUrl = '';
+      let nifiUrl = '';
+      let registryUrl = '';
+      try {
+        const outputs = JSON.parse(outputJson);
+        if (outputs.dfm_url?.value) {
+          dfmUrl = outputs.dfm_url.value;
+        } else {
+          console.warn(
+            'dfm_url not found in Terraform outputs, using fallback'
+          );
+          dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+        }
+        if (outputs.dfm_public_ip?.value) {
+          nifiUrl = `http://${outputs.dfm_public_ip.value}:8080/nifi`;
+          registryUrl = `http://${outputs.dfm_public_ip.value}:18080/nifi-registry`;
+        }
+        console.log('DFM URL:', dfmUrl);
+      } catch (err) {
+        console.warn('Could not parse terraform outputs JSON:', err);
+        dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+      }
 
-      // Terraform apply
-      const applyOut = await runTerraform('apply -input=false -auto-approve');
-      console.log(`⚡ Terraform apply:\n${applyOut}`);
+      await bootstrap({ nifiUrl, dfmUrl, registryUrl });
 
-      // Extract URL (from outputs)
-      const urlMatch = applyOut.match(/dfm_url\s*=\s*"(.+?)"/);
-      const instanceUrl = urlMatch
-        ? urlMatch[1]
-        : `http://ec2-instance-${registrationId}.amazonaws.com`;
+      // Update registration and send email
+      const registration = await Registration.findByPk(registrationId);
+      if (registration) {
+        await registration.update({ infra_setup_done: true });
 
-      return instanceUrl;
+        await this.mailService.sendInstanceReadyMail(
+          registration.email,
+          dfmUrl,
+          nifiUrl,
+          registryUrl,
+          registrationId,
+          registration
+        );
+
+        console.log(
+          `Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
+        );
+      } else {
+        console.warn(`Registration with ID ${registrationId} not found`);
+      }
+
+      return dfmUrl;
     } catch (err) {
       console.error(
-        `❌ Terraform failed for registration ${registrationId}:`,
+        `Terraform failed for registration ${registrationId}:`,
         err.stderr || err
       );
       throw err;
