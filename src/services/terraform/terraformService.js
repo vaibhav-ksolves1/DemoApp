@@ -3,6 +3,12 @@ import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { fileURLToPath } from 'url';
+
+import 'dotenv/config';
+
+import MailService from '../email/mailService.js';
+import Registration from '../../database/models/Registration.js';
+import { bootstrap } from '../bootstrap/index.js';
 import 'dotenv/config';
 
 import MailService from '../email/mailService.js';

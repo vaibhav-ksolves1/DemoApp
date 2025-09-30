@@ -37,7 +37,8 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false,
-        comment: 'Indicates whether Terraform infrastructure has been successfully provisioned',
+        comment:
+          'Indicates whether Terraform infrastructure has been successfully provisioned',
       },
       created_at: {
         allowNull: false,
