@@ -1,5 +1,12 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
+import ejs from 'ejs';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default class MailService {
   constructor() {
@@ -14,47 +21,67 @@ export default class MailService {
     });
   }
 
-  /**
-   * Send email notifying the instance is ready
-   * @param {string} recipientEmail - email of the recipient
-   * @param {string} instanceUrl - URL of the EC2 instance
-   * @param {string} registrationId - optional registration ID for context
-   */
   async sendInstanceReadyMail(
-    recipientEmail,
-    instanceUrl,
-    registrationId = ''
+    to,
+    dfmUrl = 'http',
+    nifiUrl,
+    registryUrl,
+    registrationId,
+    registration
   ) {
-    try {
-      const mailOptions = {
-        from: `"DFM Infra" <no-reply@example.com>`,
-        to: recipientEmail,
-        subject: `Your EC2 Instance ${registrationId} is Ready 🚀`,
-        html: `
-          <p>Hello,</p>
-          <p>Your EC2 instance ${
-            registrationId ? `for registration ${registrationId} ` : ''
-          }is now ready!</p>
-          <p>Access it here: <a href="${instanceUrl}" target="_blank">${instanceUrl}</a></p>
-          <p>Thanks,<br>Infra Team</p>
-        `,
-      };
+    // Path to EJS template
+    const templatePath = path.join(
+      __dirname,
+      '../../shared/templates/email/dfmProvisioning.ejs'
+    );
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Mail sent:', info.messageId, recipientEmail);
-    } catch (err) {
-      console.error('❌ Failed to send mail:', err);
-    }
+    const html = await ejs.renderFile(templatePath, {
+      recieverName: 'John Doe',
+      registrationId: 'N/A',
+      dfmUrl: dfmUrl || '#',
+      nifiUrl: nifiUrl || '#',
+      registryUrl: registryUrl || '#',
+      logo: '/icons/logo.png',
+      urlIcon: '/icons/url.png',
+      year: new Date().getFullYear(),
+    });
+    // Send email
+    await this.transporter.sendMail({
+      from: `"DFM Team" <${process.env.SMTP_FROM}>`,
+      to,
+      subject: `Your DFM instance is ready!`,
+      html,
+    });
+
+    console.log(`Email sent to ${to} with registration ID ${registrationId}`);
   }
 
   async sendTrialReminder(email, daysLeft) {
-    const mailOptions = {
-      from: process.env.SMTP_USER,
-      to: email,
-      subject: `Trial Expiry Reminder`,
-      text: `Hi, your trial will expire in ${daysLeft} day(s). Please take necessary action.`,
-    };
+    try {
+      // Path to EJS template for trial reminder
+      const templatePath = path.join(
+        __dirname,
+        '../../shared/templates/email/trialReminder.ejs'
+      );
 
-    await this.transporter.sendMail(mailOptions);
+      // Render the template
+      const html = await ejs.renderFile(templatePath, {
+        daysLeft,
+        year: new Date().getFullYear(),
+      });
+
+      // Send the email
+      await this.transporter.sendMail({
+        from: `"DFM Team" <${process.env.SMTP_FROM}>`,
+        to: email,
+        subject: `Trial Expiry Reminder`,
+        html, // Use rendered HTML instead of plain text
+      });
+
+      console.log(`Trial reminder sent to ${email}`);
+    } catch (err) {
+      console.error('Failed to send trial reminder:', err);
+      throw err;
+    }
   }
 }

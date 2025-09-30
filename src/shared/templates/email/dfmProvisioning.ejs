@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css?family=Red+Hat+Display&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Poppins&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./css/main.css" rel="stylesheet" />
+    <title>DFM Instance Ready</title>
+  </head>
+  <body style="margin: auto; font-family: 'Red Hat Display', sans-serif">
+    <div style="width: 100%">
+      <div
+        style="
+          background: #fff7ed;
+          width: 580px;
+          font-family: 'Red Hat Display', sans-serif;
+          color: #444445;
+          padding: 24px;
+        "
+      >
+        <table
+          style="color: #444445"
+          align="center"
+          border="0"
+          cellspacing="0"
+          cellpadding="0"
+          width="100%"
+        >
+          <!-- Logo -->
+          <% if (typeof logo !== 'undefined' && logo) { %>
+          <tr>
+            <td>
+              <img
+                src="<%= logo %>"
+                width="120px"
+                height="90"
+                alt="Company Logo"
+              />
+            </td>
+          </tr>
+          <% } %>
+
+          <!-- Greeting -->
+          <tr>
+            <td>
+              <h2 style="color: #444445; margin-bottom: 0px">
+                Hi <%= typeof recieverName !== 'undefined' ? recieverName :
+                "{placeholder}" %>
+              </h2>
+            </td>
+          </tr>
+
+          <!-- Registration ID -->
+          <tr>
+            <td>
+              <div style="width: 85%">
+                <p style="font-weight: 400">
+                  Your DFM instance with registration ID
+                  <strong
+                    ><%= typeof registrationId !== 'undefined' ? registrationId
+                    : "{placeholder}" %></strong
+                  >
+                  is now ready.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- URLs Section -->
+          <tr>
+            <td>
+              <div
+                style="
+                  background-color: #ffff;
+                  border-radius: 16px;
+                  overflow: hidden;
+                  border: 1px solid #e9e0e0;
+                "
+              >
+                <table
+                  style="color: #444445; font-size: 16px"
+                  align="center"
+                  width="100%"
+                  border="0"
+                  cellspacing="0"
+                  cellpadding="0"
+                >
+                  <!-- DFM URL -->
+                  <tr style="background-color: #fff">
+                    <td
+                      width="50"
+                      style="text-align: center; padding: 12px 10px"
+                    >
+                      <img
+                        alt="DFM url icon"
+                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                    <td
+                      style="
+                        text-align: left;
+                        padding: 12px 10px;
+                        color: #4f5a6899;
+                      "
+                    >
+                      DFM URL
+                    </td>
+                    <td style="text-align: right; padding: 12px 20px">
+                      <%= typeof dfmUrl !== 'undefined' ? dfmUrl :
+                      "{placeholder}" %>
+                    </td>
+                  </tr>
+
+                  <!-- NiFi URL -->
+                  <tr style="background-color: #f9fbff">
+                    <td
+                      width="50"
+                      style="text-align: center; padding: 12px 10px"
+                    >
+                      <img
+                        alt="NiFi url icon"
+                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                    <td
+                      style="
+                        text-align: left;
+                        padding: 12px 10px;
+                        color: #4f5a6899;
+                      "
+                    >
+                      NiFi URL
+                    </td>
+                    <td style="text-align: right; padding: 12px 20px">
+                      <%= typeof nifiUrl !== 'undefined' ? nifiUrl :
+                      "{placeholder}" %>
+                    </td>
+                  </tr>
+
+                  <!-- Registry URL -->
+                  <tr style="background-color: #f9fbff">
+                    <td
+                      width="50"
+                      style="text-align: center; padding: 12px 10px"
+                    >
+                      <img
+                        alt="Registry url icon"
+                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                    <td
+                      style="
+                        text-align: left;
+                        padding: 12px 10px;
+                        color: #4f5a6899;
+                      "
+                    >
+                      Registry URL
+                    </td>
+                    <td style="text-align: right; padding: 12px 20px">
+                      <%= typeof registryUrl !== 'undefined' ? registryUrl :
+                      "{placeholder}" %>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td>
+              <table
+                align="left"
+                style="padding: 10px 10px 10px 0"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+              >
+                <tbody>
+                  <tr>
+                    <td
+                      style="
+                        border-radius: 8px;
+                        font-family: 'Red Hat Display', sans-serif;
+                        font-size: 18px;
+                        line-height: 24px;
+                        border: 1px solid #fd891f;
+                        background-color: #fd891f;
+                        box-shadow: 0px 3px 9px 0px #00000017;
+                        text-align: center;
+                      "
+                      bgcolor="#fd891f"
+                      align="center"
+                    >
+                      <a
+                        href="<%= typeof dfmUrl !== 'undefined' ? dfmUrl : '#' %>"
+                        style="
+                          text-decoration: none;
+                          color: #ffffff;
+                          padding: 8px 20px;
+                          border-radius: 8px;
+                          background-color: #fd891f;
+                          display: inline-block;
+                          border: 8px solid #fd891f;
+                        "
+                      >
+                        <strong> Check out DFM </strong>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
