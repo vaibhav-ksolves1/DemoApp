@@ -1,0 +1,333 @@
+<!-- Update this template with the -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Trial Expiry Reminder</title>
+  </head>
+  <body>
+    <p>Hi,</p>
+    <p>
+      Your trial will expire in <strong><%= daysLeft %></strong> day(s). Please
+      take necessary action.
+    </p>
+    <p>Thank you,<br />DFM Team &copy; <%= year %></p>
+  </body>
+</html>
+
+<!-- this one  -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css?family=Red+Hat+Display&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Poppins&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./css/main.css" rel="stylesheet" />
+    <title>Document</title>
+  </head>
+  <body
+    style="
+      margin: auto;
+      font-family: 'Red Hat Display', sans-serif;
+    "
+  >
+  <div style="width: 100%;">
+    <div
+      style="
+        background: #fff7ed;
+        width: 580px;
+        font-family: 'Red Hat Display', sans-serif;
+        color: #444445;
+        padding: 24px;
+      "
+    >
+      <table
+        style="color: #444445"
+        align="center"
+        width="0"
+        border="0"
+        cellspacing="0"
+        cellpadding="0"
+      >
+      <% if (typeof logo !== 'undefined' && logo) { %>
+        <tr>
+          <td>
+            <img src="<%= logo %>" width="120px" height="90" alt="Company Logo" />
+          </td>
+        </tr>
+      <% } %>
+        <tr>
+          <td>
+            <% if (reciever) { %>
+              <h2 style="color: #444445; margin-bottom: 0px;">
+                Hi <%= reciever.first_name?.charAt(0)?.toUpperCase() +
+                  reciever.first_name?.slice(1)?.toLowerCase() %> 
+                <% if (reciever.last_name) { %>
+                  <%= reciever.last_name.charAt(0).toUpperCase() + reciever.last_name.slice(1).toLowerCase() %>
+                <% } %>
+              </h2>
+            <% } %>
+          </td>
+        </tr>
+         <tr>
+          <td>
+            <div style="width: 85%;">
+                </p> 
+                  <p style="font-weight: 400;"> 
+                  Schedule deployment request has been Rejected for <%= flowName %> to the <%=
+                destinationClusterName %> due to <%= cancelReason %>
+                  </p> 
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+             <div
+              style="
+                background-color: #ffff;
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid #e9e0e0;
+              "
+            >
+              <table
+                style="color: #444445; font-size: 16px;"
+                align="center"
+                width="100%"
+                border="0"
+                cellspacing="0"
+                cellpadding="0"
+              >
+               <tr style="background-color: #fff">
+                <% if (typeof clusterIcon !== 'undefined' && clusterIcon) { %>
+                  <td width="50" style="text-align: center; padding: 12px 10px">
+                    <img
+                      alt="Cluster icon"
+                      src="<%= clusterIcon %>"
+                      style="vertical-align: middle"
+                    />
+                  </td>
+                <% } %>
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                    Cluster
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= destinationClusterName %>
+                  </td>
+               </tr>
+
+               <tr style="background-color:#f9fbff">
+                <% if (typeof processGroupIcon !== 'undefined' && processGroupIcon) { %>
+                  <td width="50" style="text-align: center; padding: 12px 10px">
+                    <img
+                      alt="Flow icon"
+                      src="<%= processGroupIcon %>"
+                      style="vertical-align: middle"
+                    />
+                  </td>
+                <% } %>
+                
+                <td
+                  style="
+                    text-align: left;
+                    padding: 12px 10px;
+                    color: #4f5a6899;
+                  "
+                >
+                  Process Group
+                </td>
+                <td style="text-align: right; padding: 12px 20px">
+                  <%= processGroupName %>
+                </td>
+              </tr>
+
+                 <tr style="background-color:#f9fbff">
+                  <% if (typeof flowIcon !== 'undefined' && flowIcon) { %>
+                    <td width="50" style="text-align: center; padding: 12px 10px">
+                      <img
+                        alt="Flow icon"
+                        src="<%= flowIcon %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                  <% } %>
+                  
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                    Flow Name
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= flowName %>
+                  </td>
+                </tr>
+
+                <tr style="background-color: #fff">
+                  <td style="text-align: center; padding: 12px 10px">
+                    <img
+                      alt="requested version icon"
+                      src="<%= versionIcon %>"
+                      style="vertical-align: middle"
+                    />
+                  </td>
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                    Requested Version
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                   <%= scheduleData.version %>
+                  </td>
+                </tr>
+
+                <tr style="background-color: #f9fbff">
+                  <!-- add background color on condition based -->
+                  <% if (typeof notificationIcon !== 'undefined' && notificationIcon) { %>
+                    <td style="text-align: center; padding: 12px 10px">
+                      <img
+                        alt="Post-deploy status"
+                        src="<%= notificationIcon %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                  <% } %>
+                  
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                    Post Deploy Status
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= deployStatus %>
+                  </td>
+                </tr>
+
+                <tr style="background-color: #fff">
+                  <% if (typeof timeIcon !== 'undefined' && timeIcon) { %>
+                    <td style="text-align: center; padding: 12px 10px">
+                      <img
+                        alt="Deployment time icon"
+                        src="<%= timeIcon %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                  <% } %>
+                  
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                     Deployment Date & Time 
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= time %>
+                  </td>
+                </tr>
+
+                <!-- Rejected By -->
+                <tr style="background-color: #f9fbff">
+                  <% if (typeof updatedByIcon !== 'undefined' && updatedByIcon) { %>
+                    <td style="text-align: center; padding: 12px 10px">
+                      <img
+                        alt="Updated By icon"
+                        src="<%= updatedByIcon %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                  <% } %>
+                  
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                   Rejected By
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= updatedBy %>
+                  </td>
+                </tr>
+
+                <!-- Rejected At -->
+                <tr style="background-color: #fff">
+                  <% if (typeof timeIcon !== 'undefined' && timeIcon) { %>
+                    <td style="text-align: center; padding: 12px 10px">
+                      <img
+                        alt="Updated At icon"
+                        src="<%= timeIcon %>"
+                        style="vertical-align: middle"
+                      />
+                    </td>
+                  <% } %>
+                  
+                  <td
+                    style="
+                      text-align: left;
+                      padding: 12px 10px;
+                      color: #4f5a6899;
+                    "
+                  >
+                   Rejected Date & Time
+                  </td>
+                  <td style="text-align: right; padding: 12px 20px">
+                    <%= updatedAt %>
+                  </td>
+                </tr>
+
+              </table>
+          </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table align="left" style="padding: 10px 10px 10px 0" cellpadding="0" cellspacing="0" border="0">
+              <tbody>
+                  <tr>
+                    <td style="border-radius:8px; font-family: 'Red Hat Display', sans-serif; font-style:normal; font-weight:normal!important; font-size:18px; line-height:24px; padding:0px 0px; border:1px solid #fd891f; background-color: #fd891f;  box-shadow: 0px 3px 9px 0px #00000017; text-align: center;"
+                    bgcolor="#fd891f" align="center">
+                    <a href=" <%=confirmLink %>"
+                        style="text-decoration:none; color:#ffffff; padding:8px 20px; border-radius:8px; background-color: #fd891f; display: inline-block; border: 8px solid #fd891f;">
+                              <strong>
+                               Check it out
+                              </strong>
+                          </a>
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+          </td>
+      </tr>
+      </table>
+    </div>
+    </div>
+  </body>
+</html>
