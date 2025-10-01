@@ -7,11 +7,11 @@ import {
   // associateCluster,
 } from './dfm/dfmSetup.js';
 
-export async function bootstrap({ dfmUrl, nifiUrl, registryUrl }) {
+export async function bootstrap({ dfmUrl, nifiUrl1, nifiUrl2, registryUrl }) {
   const dfmClient = createDfmClient(dfmUrl);
 
   console.log('Waiting for 10 s....');
-  await delay(35000);
+  await delay(95000);
 
   const dfmToken = await getLoginToken({ dfmUrl, dfmClient });
   const registryId = await createRegistry({
@@ -22,8 +22,16 @@ export async function bootstrap({ dfmUrl, nifiUrl, registryUrl }) {
   });
   await createCluster({
     dfmUrl,
-    nifiUrl,
+    nifiUrl: nifiUrl1,
     clusterName: 'Development',
+    token: dfmToken,
+    registryId,
+    dfmClient,
+  });
+  await createCluster({
+    dfmUrl,
+    nifiUrl: nifiUrl2,
+    clusterName: 'Production',
     token: dfmToken,
     registryId,
     dfmClient,

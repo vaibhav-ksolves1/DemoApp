@@ -4,29 +4,29 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
-# variable "aws_access_key" {
-#   description = "AWS access key"
-#   type        = string
-#   sensitive   = true
-# }
+variable "aws_access_key" {
+  description = "AWS access key"
+  type        = string
+  sensitive   = true
+}
 
-# variable "aws_secret_key" {
-#   description = "AWS secret key"
-#   type        = string
-#   sensitive   = true
-# }
+variable "aws_secret_key" {
+  description = "AWS secret key"
+  type        = string
+  sensitive   = true
+}
 
-# variable "aws_session_token" {
-#   description = "AWS session token"
-#   type        = string
-#   sensitive   = true
-# }
+variable "aws_session_token" {
+  description = "AWS session token"
+  type        = string
+  sensitive   = true
+}
 
-# variable "subnet_id" {
-#   description = "SUBNET ID"
-#   type        = string
-#   default     = "subnet-09358ed2c921fa92a"
-# }
+variable "subnet_id" {
+  description = "SUBNET ID"
+  type        = string
+  default     = "subnet-09358ed2c921fa92a"
+}
 
 variable "ec2_instance_type" {
   description = "EC2 instance type"
@@ -61,7 +61,7 @@ variable "route53_zone_name" {
 variable "user_domain" {
   description = "The domain name (e.g., example.com) associated with the hosted zone"
   type        = string
-  default     = "demo"
+  default     = "demo3"
 }
 
 variable "nifi_user" {

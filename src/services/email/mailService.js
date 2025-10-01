@@ -21,14 +21,15 @@ export default class MailService {
     });
   }
 
-  async sendInstanceReadyMail(
+  async sendInstanceReadyMail({
     to,
     dfmUrl = 'http',
-    nifiUrl,
+    nifiUrl1,
+    nifiUrl2,
     registryUrl,
     registrationId,
-    registration
-  ) {
+    registration,
+  }) {
     // Path to EJS template
     const templatePath = path.join(
       __dirname,
@@ -36,15 +37,15 @@ export default class MailService {
     );
 
     const html = await ejs.renderFile(templatePath, {
-      recieverName: 'John Doe',
-      registrationId: 'N/A',
-      dfmUrl: dfmUrl || '#',
-      nifiUrl: nifiUrl || '#',
-      registryUrl: registryUrl || '#',
-      logo: '/icons/logo.png',
-      urlIcon: '/icons/url.png',
-      year: new Date().getFullYear(),
+      userName: 'John Doe',
+      dfmUrl: dfmUrl,
+      username: 'system.administrator@dfm.com',
+      password: 'systemadmin@dfm',
+      nifi1Url: nifiUrl1,
+      nifi2Url: nifiUrl2,
+      registryUrl: registryUrl,
     });
+
     // Send email
     await this.transporter.sendMail({
       from: `"DFM Team" <${process.env.SMTP_FROM}>`,
@@ -68,6 +69,7 @@ export default class MailService {
       const html = await ejs.renderFile(templatePath, {
         daysLeft,
         year: new Date().getFullYear(),
+        logoUrl: '/icons/logo.png',
       });
 
       // Send the email
