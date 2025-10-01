@@ -37,7 +37,7 @@ variable "ec2_instance_type" {
 variable "dfm_ami" {
   description = "DFM AMI ID"
   type        = string
-  default     = "ami-06537fb8ad5cf5a00"
+  default     = "ami-00138555b11942122"
 }
 
 variable "ec2_volume_size" {
@@ -61,7 +61,7 @@ variable "route53_zone_name" {
 variable "user_domain" {
   description = "The domain name (e.g., example.com) associated with the hosted zone"
   type        = string
-  default     = "demo3"
+  default     = "demo23"
 }
 
 variable "nifi_user" {
@@ -76,4 +76,8 @@ variable "nifi_pass" {
   default     = "adminpass1234"
 }
 
-
+variable "ssh_user" {
+  description = "SSH username to connect to the EC2 instance"
+  type        = string
+  default     = "ubuntu"
+}
