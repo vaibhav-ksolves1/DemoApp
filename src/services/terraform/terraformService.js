@@ -26,139 +26,139 @@ export default class TerraformService {
     try {
       console.log(`Provisioning infra for registration ${registrationId}`);
 
-      // Ensure folder exists
-      if (!fs.existsSync(registrationDir)) {
-        fs.mkdirSync(registrationDir, { recursive: true });
-        console.log(`Created infra folder for registration ${registrationId}`);
-      }
+//       // Ensure folder exists
+//       if (!fs.existsSync(registrationDir)) {
+//         fs.mkdirSync(registrationDir, { recursive: true });
+//         console.log(`Created infra folder for registration ${registrationId}`);
+//       }
 
-      // Copy all base module files
-      for (const file of fs.readdirSync(this.baseDir)) {
-        const src = path.join(this.baseDir, file);
-        const dest = path.join(registrationDir, file);
-        fs.copyFileSync(src, dest);
-      }
+//       // Copy all base module files
+//       for (const file of fs.readdirSync(this.baseDir)) {
+//         const src = path.join(this.baseDir, file);
+//         const dest = path.join(registrationDir, file);
+//         fs.copyFileSync(src, dest);
+//       }
 
-      // Generate dynamic root main.tf
-      const mainTf = `
-  module "registration_infra" {
-    source          = "${this.baseDir.replace(/\\/g, '/')}"
-    registration_id = "${registrationId}"
-    user_domain     = var.user_domain      
-    aws_access_key  = var.aws_access_key
-    aws_secret_key  = var.aws_secret_key
-    aws_session_token = var.aws_session_token
-  }
+//       // Generate dynamic root main.tf
+//       const mainTf = `
+//   module "registration_infra" {
+//     source          = "${this.baseDir.replace(/\\/g, '/')}"
+//     registration_id = "${registrationId}"
+//     user_domain     = var.user_domain      
+//     aws_access_key  = var.aws_access_key
+//     aws_secret_key  = var.aws_secret_key
+//     aws_session_token = var.aws_session_token
+//   }
 
-  # Re-export module outputs so terraform output -json works
- output "dfm_url" {
-  value = module.registration_infra.dfm_url
-}
+//   # Re-export module outputs so terraform output -json works
+//  output "dfm_url" {
+//   value = module.registration_infra.dfm_url
+// }
 
-output "nifi_0_url" {
-  value = module.registration_infra.nifi_0_url
-}
+// output "nifi_0_url" {
+//   value = module.registration_infra.nifi_0_url
+// }
 
-output "nifi_1_url" {
-  value = module.registration_infra.nifi_1_url
-}
-  output "server_public_ip" {
-  value = module.registration_infra.server_public_ip
-  description = "Public IP of the server"
-}
-  `;
-      fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
+// output "nifi_1_url" {
+//   value = module.registration_infra.nifi_1_url
+// }
+//   output "server_public_ip" {
+//   value = module.registration_infra.server_public_ip
+//   description = "Public IP of the server"
+// }
+//   `;
+//       fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
 
       const registration = await Registration.findByPk(registrationId);
-      console.log('Registration ', registration);
+//       console.log('Registration ', registration);
       // Helper to run Terraform commands
-      const runTerraform = async cmd => {
-        console.log(`Running terraform ${cmd}...`);
-        try {
-          const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
-            cwd: registrationDir,
-            env: { ...process.env },
-            maxBuffer: 1024 * 1024, // 1 MB
-          });
-          if (stderr) console.log('Terraform info:', stderr);
-          return stdout;
-        } catch (err) {
-          console.error('Terraform command failed:', err);
-          throw err;
-        }
-      };
+      // const runTerraform = async cmd => {
+      //   console.log(`Running terraform ${cmd}...`);
+      //   try {
+      //     const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
+      //       cwd: registrationDir,
+      //       env: { ...process.env },
+      //       maxBuffer: 1024 * 1024, // 1 MB
+      //     });
+      //     if (stderr) console.log('Terraform info:', stderr);
+      //     return stdout;
+      //   } catch (err) {
+      //     console.error('Terraform command failed:', err);
+      //     throw err;
+      //   }
+      // };
       const username =
         registration?.dataValues?.name.toLowerCase() || `demo${registrationId}`;
-      console.log('USERNAME:           ;', username);
-      // Run Terraform workflow
-      await runTerraform('init -input=false');
-      await runTerraform(
-        `plan -input=false -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
-      );
-      await runTerraform(
-        `apply -input=false -auto-approve -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
-      );
+      // console.log('USERNAME:           ;', username);
+      // // Run Terraform workflow
+      // await runTerraform('init -input=false');
+      // await runTerraform(
+      //   `plan -input=false -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
+      // );
+      // await runTerraform(
+      //   `apply -input=false -auto-approve -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
+      // );
 
-      // Get outputs as JSON
-      // Get outputs as JSON
-      const outputJson = await runTerraform('output -json');
-      let dfmUrl = '';
-      let nifiUrl1 = '';
-      let nifiUrl2 = '';
-      let registryUrl = '';
-      console.log('OUTTTT;', outputJson);
-      try {
-        const outputs = JSON.parse(outputJson);
-        if (outputs.dfm_url?.value) {
-          dfmUrl = outputs.dfm_url.value;
-        } else {
-          console.warn(
-            'dfm_url not found in Terraform outputs, using fallback'
-          );
-          dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
-        }
-        if (outputs) {
-          nifiUrl1 = outputs.nifi_0_url.value;
-          nifiUrl2 = outputs.nifi_1_url.value;
-          registryUrl =
-            outputs.nifi_0_url.value.replace(/:8080/, ':18080') +
-            '/nifi-registry';
-        }
-        console.log('ddd NiFi URL:', outputs);
-        console.log('DFM URL:', dfmUrl);
-      } catch (err) {
-        console.warn('Could not parse terraform outputs JSON:', err);
-        dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
-      }
+      // // Get outputs as JSON
+      // // Get outputs as JSON
+      // const outputJson = await runTerraform('output -json');
+      // let dfmUrl = '';
+      // let nifiUrl1 = '';
+      // let nifiUrl2 = '';
+      // let registryUrl = '';
+      // console.log('OUTTTT;', outputJson);
+      // try {
+      //   const outputs = JSON.parse(outputJson);
+      //   if (outputs.dfm_url?.value) {
+      //     dfmUrl = outputs.dfm_url.value;
+      //   } else {
+      //     console.warn(
+      //       'dfm_url not found in Terraform outputs, using fallback'
+      //     );
+      //     dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+      //   }
+      //   if (outputs) {
+      //     nifiUrl1 = outputs.nifi_0_url.value;
+      //     nifiUrl2 = outputs.nifi_1_url.value;
+      //     registryUrl =
+      //       outputs.nifi_0_url.value.replace(/:8080/, ':18080') +
+      //       '/nifi-registry';
+      //   }
+      //   console.log('ddd NiFi URL:', outputs);
+      //   console.log('DFM URL:', dfmUrl);
+      // } catch (err) {
+      //   console.warn('Could not parse terraform outputs JSON:', err);
+      //   dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+      // }
 
-      await bootstrap({ nifiUrl1, nifiUrl2, dfmUrl, registryUrl });
+      // await bootstrap({ nifiUrl1, nifiUrl2, dfmUrl, registryUrl });
       // Update registration and send email
       if (registration) {
         await registration.update({ infra_setup_done: true });
 
         await this.mailService.sendInstanceReadyMail({
           to: registration.email,
-          // dfmUrl: 'www.avc',
-          dfmUrl,
-          // nifi1Url: 'nifiUrl1',
-          nifi1Url: nifiUrl1,
-          // nifi2Url: 'nifiUrl2',
-          nifi2Url: nifiUrl2,
-          registryUrl,
-          // registryUrl: 'registryUrl',
+          dfmUrl: 'www.avc',
+          // dfmUrl,
+          nifi1Url: 'nifiUrl1',
+          // nifi1Url: nifiUrl1,
+          nifi2Url: 'nifiUrl2',
+          // nifi2Url: nifiUrl2,
+          // registryUrl,
+          registryUrl: 'registryUrl',
           registrationId,
           registration,
         });
 
-        console.log(
-          `Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
-        );
+          // console.log(
+          //   `Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
+          // );
       } else {
         console.warn(`Registration with ID ${registrationId} not found`);
       }
 
-      return dfmUrl;
-      // return;
+      // return dfmUrl;
+      return;
     } catch (err) {
       console.error(
         `Terraform failed for registration ${registrationId}:`,
