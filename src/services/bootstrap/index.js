@@ -10,8 +10,8 @@ import {
 export async function bootstrap({ dfmUrl, nifiUrl1, nifiUrl2, registryUrl }) {
   const dfmClient = createDfmClient(dfmUrl);
 
-  console.log('Waiting for 10 s....');
-  await delay(95000);
+  console.log('Waiting for 105 s....');
+  await delay(105000);
 
   const dfmToken = await getLoginToken({ dfmUrl, dfmClient });
   const registryId = await createRegistry({

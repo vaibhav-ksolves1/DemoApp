@@ -29,6 +29,7 @@ export default class MailService {
     registryUrl,
     registrationId,
     registration,
+    username,
   }) {
     // Path to EJS template
     const templatePath = path.join(
@@ -37,7 +38,7 @@ export default class MailService {
     );
 
     const html = await ejs.renderFile(templatePath, {
-      userName: 'John Doe',
+      userName: username,
       dfmUrl: dfmUrl,
       username: 'system.administrator@dfm.com',
       password: 'systemadmin@dfm',

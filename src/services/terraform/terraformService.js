@@ -62,10 +62,14 @@ output "nifi_0_url" {
 output "nifi_1_url" {
   value = module.registration_infra.nifi_1_url
 }
+output "nifi_registry_url" {
+  value = module.registration_infra.nifi_registry_url
+}
   output "server_public_ip" {
   value = module.registration_infra.server_public_ip
   description = "Public IP of the server"
 }
+  
   `;
       fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
 
@@ -88,7 +92,8 @@ output "nifi_1_url" {
         }
       };
       const username =
-        registration?.dataValues?.name.toLowerCase() || `demo${registrationId}`;
+        registration?.dataValues?.name.toLowerCase().trim()?.replace(' ', '') ||
+        `demo${registrationId}`;
       console.log('USERNAME:           ;', username);
       // Run Terraform workflow
       await runTerraform('init -input=false');
@@ -118,11 +123,9 @@ output "nifi_1_url" {
           dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
         }
         if (outputs) {
-          nifiUrl1 = outputs.nifi_0_url.value;
-          nifiUrl2 = outputs.nifi_1_url.value;
-          registryUrl =
-            outputs.nifi_0_url.value.replace(/:8080/, ':18080') +
-            '/nifi-registry';
+          nifiUrl1 = outputs.nifi_0_url.value + '/nifi';
+          nifiUrl2 = outputs.nifi_1_url.value + '/nifi';
+          registryUrl = outputs.nifi_registry_url.value + '/nifi-registry';
         }
         console.log('ddd NiFi URL:', outputs);
         console.log('DFM URL:', dfmUrl);
@@ -138,12 +141,13 @@ output "nifi_1_url" {
 
         await this.mailService.sendInstanceReadyMail({
           to: registration.email,
+          username: registration?.dataValues?.name,
           // dfmUrl: 'www.avc',
           dfmUrl,
           // nifi1Url: 'nifiUrl1',
-          nifi1Url: nifiUrl1,
+          nifiUrl1: nifiUrl1,
           // nifi2Url: 'nifiUrl2',
-          nifi2Url: nifiUrl2,
+          nifiUrl2: nifiUrl2,
           registryUrl,
           // registryUrl: 'registryUrl',
           registrationId,
