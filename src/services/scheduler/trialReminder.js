@@ -43,26 +43,28 @@ export default class TrialReminderService {
             ];
             await reg.update({ trial_email_sent_days: updatedDays });
 
-            console.log(
-              `📧 Sent reminder to ${reg.email} (${daysLeft} days left) at ${reminderTime}`
+            logger.info(
+              '📧 Sent reminder to :email (:daysLeft days left) at :time',
+              { email: reg.email, daysLeft, time: reminderTime }
             );
           } catch (err) {
-            console.error(
-              `❌ Failed to send reminder for ${reg.email} (${daysLeft} days left):`,
-              err
+            logger.error(
+              'Failed to send reminder for :email (:daysLeft days left)',
+              { email: reg.email, daysLeft, error: err }
             );
           }
         });
 
-        console.log(
-          `⏱ Scheduled reminder for ${reg.email} (${daysLeft} days left) at ${reminderTime}`
+        logger.info(
+          'Scheduled reminder for :email (:daysLeft days left) at :time',
+          { email: reg.email, daysLeft, time: reminderTime }
         );
       }
     });
   }
 
   async runScheduler() {
-    console.log('🕒 Running trial reminder scheduler...');
+    logger.info('Running trial reminder scheduler...');
     try {
       const registrations = await Registration.findAll({
         where: { infra_setup_done: true }, // ✅ filter only those with infra ready
@@ -70,7 +72,7 @@ export default class TrialReminderService {
 
       registrations.forEach(reg => this.scheduleRemindersForRegistration(reg));
     } catch (err) {
-      console.error('❌ Error in trial reminder scheduler:', err);
+      logger.error('Error in trial reminder scheduler:', { error: err });
     }
   }
 }

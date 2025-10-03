@@ -55,7 +55,10 @@ export default class MailService {
       html,
     });
 
-    console.log(`Email sent to ${to} with registration ID ${registrationId}`);
+    logger.info('Email sent to :to with registration ID :registrationId', {
+      to,
+      registrationId,
+    });
   }
 
   async sendTrialReminder(email, daysLeft) {
@@ -78,12 +81,12 @@ export default class MailService {
         from: `"DFM Team" <${process.env.SMTP_FROM}>`,
         to: email,
         subject: `Trial Expiry Reminder`,
-        html, // Use rendered HTML instead of plain text
+        html,
       });
 
-      console.log(`Trial reminder sent to ${email}`);
+      logger.info('Trial reminder sent to :email', { email });
     } catch (err) {
-      console.error('Failed to send trial reminder:', err);
+      logger.error('Failed to send trial reminder', { email, error: err });
       throw err;
     }
   }

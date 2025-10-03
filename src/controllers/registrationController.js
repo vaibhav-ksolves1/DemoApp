@@ -1,36 +1,52 @@
 import RegistrationService from '../services/registration/registrationService.js';
 import {
   sendSuccessResponse,
-  sendErrorResponse,
   asyncHandler,
 } from '../shared/utils/responseHandler.js';
 
 import RegistrationRepository from '../repositories/registrationRepository.js';
+import { resMessages } from '../shared/constants/index.js';
+import { prepareMessage } from '../shared/index.js';
+
 export default class RegistrationController {
   constructor() {
     const registrationRepo = new RegistrationRepository();
     this.registrationService = new RegistrationService(registrationRepo);
-
-    // Bind methods if used directly in routes
-    this.register = this.register.bind(this);
-    this.getUser = this.getUser.bind(this);
   }
 
+  // Register a new user
   register = asyncHandler(async (req, res) => {
     const registration = await this.registrationService.register(req.body);
     return sendSuccessResponse({
       response: res,
-      responseMessage: 'Registration successful',
+      responseMessage: resMessages.REGISTRATION_SUCCESS,
       responseData: registration,
     });
   });
 
-  getUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const user = await this.registrationService.getUser(id);
+  // Get all failed registrations
+  getFailedRegistrations = asyncHandler(async (req, res) => {
+    const failedRegs = await this.registrationService.getFailedRegistrations();
     return sendSuccessResponse({
       response: res,
-      responseData: user,
+      responseData: failedRegs,
+    });
+  });
+
+  // Delete a failed registration by ID
+  deleteFailedRegistration = asyncHandler(async (req, res) => {
+    const { emails } = req.body;
+    const { count } =
+      await this.registrationService.deleteRegistrationsByEmails(emails);
+    return sendSuccessResponse({
+      response: res,
+      responseMessage: prepareMessage(
+        resMessages.REGISTRATION_DELETED_WITH_COUNT,
+        {
+          count,
+        }
+      ),
+      count,
     });
   });
 }
