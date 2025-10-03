@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=580" />
+    <title>DFM Instance Ready</title>
     <link
       href="https://fonts.googleapis.com/css?family=Red+Hat+Display&display=swap"
       rel="stylesheet"
@@ -9,219 +12,284 @@
       href="https://fonts.googleapis.com/css?family=Poppins&display=swap"
       rel="stylesheet"
     />
-    <link href="./css/main.css" rel="stylesheet" />
-    <title>DFM Instance Ready</title>
   </head>
-  <body style="margin: auto; font-family: 'Red Hat Display', sans-serif">
-    <div style="width: 100%">
+  <body
+    style="
+      margin: 0;
+      font-family: 'Red Hat Display', sans-serif;
+      background: #ffffff;
+    "
+  >
+    <div style="width: 100%; display: flex; justify-content: center">
       <div
         style="
           background: #fff7ed;
           width: 580px;
-          font-family: 'Red Hat Display', sans-serif;
           color: #444445;
           padding: 24px;
+          box-sizing: border-box;
+          font-family: 'Red Hat Display', sans-serif;
         "
       >
+        <div style="text-align: center; margin-bottom: 12px">
+          <img
+            src="logo-placeholder.png"
+            alt="Company Logo"
+            style="width: 120px; height: 90px; display: inline-block"
+          />
+        </div>
+
         <table
-          style="color: #444445"
           align="center"
           border="0"
           cellspacing="0"
           cellpadding="0"
           width="100%"
+          style="color: #444445; border-collapse: collapse"
         >
-          <!-- Logo -->
-          <% if (typeof logo !== 'undefined' && logo) { %>
-          <tr>
-            <td>
-              <img
-                src="<%= logo %>"
-                width="120px"
-                height="90"
-                alt="Company Logo"
-              />
-            </td>
-          </tr>
-          <% } %>
-
           <!-- Greeting -->
           <tr>
-            <td>
-              <h2 style="color: #444445; margin-bottom: 0px">
-                Hi <%= typeof recieverName !== 'undefined' ? recieverName :
-                "{placeholder}" %>
+            <td style="text-align: center; padding: 6px 0 4px 0">
+              <h2
+                style="
+                  color: #444445;
+                  margin: 0;
+                  font-size: 26px;
+                  font-weight: 700;
+                  line-height: 1.1;
+                "
+              >
+                Hi <%= userName %>
               </h2>
             </td>
           </tr>
 
-          <!-- Registration ID -->
           <tr>
-            <td>
-              <div style="width: 85%">
-                <p style="font-weight: 400">
-                  Your DFM instance with registration ID
-                  <strong
-                    ><%= typeof registrationId !== 'undefined' ? registrationId
-                    : "{placeholder}" %></strong
-                  >
-                  is now ready.
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <!-- URLs Section -->
-          <tr>
-            <td>
-              <div
+            <td style="text-align: center; padding: 8px 0">
+              <p
                 style="
-                  background-color: #ffff;
-                  border-radius: 16px;
-                  overflow: hidden;
-                  border: 1px solid #e9e0e0;
+                  margin: 0;
+                  font-size: 16px;
+                  color: #444445;
+                  font-weight: 400;
                 "
               >
-                <table
-                  style="color: #444445; font-size: 16px"
-                  align="center"
-                  width="100%"
-                  border="0"
-                  cellspacing="0"
-                  cellpadding="0"
-                >
-                  <!-- DFM URL -->
-                  <tr style="background-color: #fff">
-                    <td
-                      width="50"
-                      style="text-align: center; padding: 12px 10px"
-                    >
-                      <img
-                        alt="DFM url icon"
-                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
-                        style="vertical-align: middle"
-                      />
-                    </td>
-                    <td
-                      style="
-                        text-align: left;
-                        padding: 12px 10px;
-                        color: #4f5a6899;
-                      "
-                    >
-                      DFM URL
-                    </td>
-                    <td style="text-align: right; padding: 12px 20px">
-                      <%= typeof dfmUrl !== 'undefined' ? dfmUrl :
-                      "{placeholder}" %>
-                    </td>
-                  </tr>
-
-                  <!-- NiFi URL -->
-                  <tr style="background-color: #f9fbff">
-                    <td
-                      width="50"
-                      style="text-align: center; padding: 12px 10px"
-                    >
-                      <img
-                        alt="NiFi url icon"
-                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
-                        style="vertical-align: middle"
-                      />
-                    </td>
-                    <td
-                      style="
-                        text-align: left;
-                        padding: 12px 10px;
-                        color: #4f5a6899;
-                      "
-                    >
-                      NiFi URL
-                    </td>
-                    <td style="text-align: right; padding: 12px 20px">
-                      <%= typeof nifiUrl !== 'undefined' ? nifiUrl :
-                      "{placeholder}" %>
-                    </td>
-                  </tr>
-
-                  <!-- Registry URL -->
-                  <tr style="background-color: #f9fbff">
-                    <td
-                      width="50"
-                      style="text-align: center; padding: 12px 10px"
-                    >
-                      <img
-                        alt="Registry url icon"
-                        src="<%= typeof urlIcon !== 'undefined' ? urlIcon : '{placeholder}' %>"
-                        style="vertical-align: middle"
-                      />
-                    </td>
-                    <td
-                      style="
-                        text-align: left;
-                        padding: 12px 10px;
-                        color: #4f5a6899;
-                      "
-                    >
-                      Registry URL
-                    </td>
-                    <td style="text-align: right; padding: 12px 20px">
-                      <%= typeof registryUrl !== 'undefined' ? registryUrl :
-                      "{placeholder}" %>
-                    </td>
-                  </tr>
-                </table>
-              </div>
+                Your DFM is ready to be used.
+              </p>
             </td>
           </tr>
 
-          <!-- CTA Button -->
+          <!-- Details heading -->
           <tr>
-            <td>
+            <td style="text-align: center; padding: 10px 0 6px 0">
+              <p style="margin: 0; font-size: 15px; color: #7f6757">
+                Here are the details
+              </p>
+            </td>
+          </tr>
+
+          <!-- DFM URL -->
+          <tr>
+            <td style="text-align: center; padding: 10px 0 6px 0">
+              <div
+                style="
+                  font-size: 15px;
+                  color: #7f6757;
+                  display: inline;
+                  margin-right: 6px;
+                "
+              >
+                DFM Url:
+              </div>
+              <a
+                href="<%= dfmUrl %>"
+                style="
+                  color: #1a73e8;
+                  text-decoration: none;
+                  font-weight: 600;
+                  font-size: 15px;
+                "
+                ><%= dfmUrl %></a
+              >
+            </td>
+          </tr>
+
+          <!-- DFM Credentials -->
+          <tr>
+            <td style="text-align: center; padding: 14px 0 6px 0">
+              <p
+                style="
+                  margin: 0;
+                  font-size: 15px;
+                  font-weight: 600;
+                  color: #444445;
+                "
+              >
+                DFM Credential:
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0 10px 0">
               <table
-                align="left"
-                style="padding: 10px 10px 10px 0"
+                align="center"
                 cellpadding="0"
                 cellspacing="0"
                 border="0"
+                style="width: 100%; max-width: 380px; margin: 0 auto"
               >
-                <tbody>
-                  <tr>
-                    <td
-                      style="
-                        border-radius: 8px;
-                        font-family: 'Red Hat Display', sans-serif;
-                        font-size: 18px;
-                        line-height: 24px;
-                        border: 1px solid #fd891f;
-                        background-color: #fd891f;
-                        box-shadow: 0px 3px 9px 0px #00000017;
-                        text-align: center;
-                      "
-                      bgcolor="#fd891f"
-                      align="center"
-                    >
-                      <a
-                        href="<%= typeof dfmUrl !== 'undefined' ? dfmUrl : '#' %>"
-                        style="
-                          text-decoration: none;
-                          color: #ffffff;
-                          padding: 8px 20px;
-                          border-radius: 8px;
-                          background-color: #fd891f;
-                          display: inline-block;
-                          border: 8px solid #fd891f;
-                        "
-                      >
-                        <strong> Check out DFM </strong>
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
+                <tr>
+                  <td
+                    style="
+                      width: 50%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #7f6757;
+                      font-weight: 500;
+                      padding-bottom: 4px;
+                    "
+                  >
+                    Username
+                  </td>
+                  <td
+                    style="
+                      width: 50%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #7f6757;
+                      font-weight: 500;
+                      padding-bottom: 4px;
+                    "
+                  >
+                    Password
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="
+                      width: 50%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #444445;
+                      font-weight: 400;
+                    "
+                  >
+                    <%= username %>
+                  </td>
+                  <td
+                    style="
+                      width: 50%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #444445;
+                      font-weight: 400;
+                    "
+                  >
+                    <%= password %>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- URLs: NiFi1, NiFi2, Registry -->
+          <tr>
+            <td style="padding: 14px 0 10px 0">
+              <table
+                align="center"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="width: 100%; max-width: 540px; margin: 0 auto"
+              >
+                <tr>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #7f6757;
+                      font-weight: 500;
+                      padding-bottom: 4px;
+                    "
+                  >
+                    NiFi1 Url
+                  </td>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #7f6757;
+                      font-weight: 500;
+                      padding-bottom: 4px;
+                    "
+                  >
+                    NiFi2 Url
+                  </td>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #7f6757;
+                      font-weight: 500;
+                      padding-bottom: 4px;
+                    "
+                  >
+                    Registry Url
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #444445;
+                      font-weight: 400;
+                    "
+                  >
+                   <%= nifi1Url %>
+                  </td>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #444445;
+                      font-weight: 400;
+                    "
+                  >
+                    <%= nifi2Url %>
+                  </td>
+                  <td
+                    style="
+                      width: 33%;
+                      text-align: center;
+                      font-size: 14px;
+                      color: #444445;
+                      font-weight: 400;
+                    "
+                  >
+                    <%= registryUrl %>
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
         </table>
+
+        <!-- <p
+          style="
+            text-align: center;
+            font-size: 13px;
+            color: #6f5b4f;
+            margin: 16px 0 0;
+          "
+        >
+          If you didn't request this, contact your administrator.
+        </p> -->
       </div>
     </div>
   </body>

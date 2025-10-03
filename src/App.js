@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 
 import routes from './routes/index.js';
 import { errorMiddleware } from './shared/errors/index.js';
-import { errorMiddleware } from './shared/errors/index.js';
 import logger from './shared/logger/index.js';
 import { endpoints } from './shared/constants/index.js';
 
