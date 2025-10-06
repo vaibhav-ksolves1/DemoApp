@@ -24,13 +24,16 @@ export default class MailService {
 
   async sendInstanceReadyMail({
     to,
-    dfmUrl = 'http',
-    nifiUrl1,
-    nifiUrl2,
+    dfmUrl,
+    nifi1Url,
+    nifi1Username,
+    nifi1Password,
+    nifi2Url,
+    nifi2Username,
+    nifi2Password,
     registryUrl,
     registrationId,
-    registration,
-    username,
+    dfmUsername,
   }) {
     // Path to EJS template
     const templatePath = path.join(
@@ -39,16 +42,19 @@ export default class MailService {
     );
 
     const html = await ejs.renderFile(templatePath, {
-      userName: username,
-      dfmUrl: dfmUrl,
-      username: process.env.DFM_DEFAULT_ADMIN_USER || 'admin',
-      password: process.env.DFM_DEFAULT_ADMIN_PASS || 'admin@123',
       logoUrl: '/icons/logo.png',
-      nifiUsername: process.env.NIFI_DEFAULT_ADMIN_USER || 'admin',
-      nifiPassword: process.env.NIFI_DEFAULT_ADMIN_PASS || 'adminpass1234',
-      nifi1Url: nifiUrl1,
-      nifi2Url: nifiUrl2,
-      registryUrl: registryUrl,
+      frame: '/icons/frame.png',
+      username,
+      dfmUrl,
+      dfmUsername,
+      dfmPassword,
+      nifi1Url,
+      nifi1Username,
+      nifi1Password,
+      nifi2Url,
+      nifi2Username,
+      nifi2Password,
+      registryUrl,
     });
 
     // Send email
@@ -76,8 +82,8 @@ export default class MailService {
       // Render the template
       const html = await ejs.renderFile(templatePath, {
         daysLeft,
-        year: new Date().getFullYear(),
         logoUrl: '/icons/logo.png',
+        frame: '/icons/frame.png',
         userName,
       });
 

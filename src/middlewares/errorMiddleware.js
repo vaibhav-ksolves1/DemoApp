@@ -6,7 +6,10 @@ import {
   SQLError,
 } from '../shared/errors/customErrors.js';
 import { httpCodes, messages } from '../shared/constants/index.js';
+import { logger } from '../shared/index.js';
+
 export default function errorMiddleware(err, req, res, next) {
+  logger.error('Error Middleware:', { error: err, stack: err.stack });
   let statusCode = httpCodes.INTERNAL_SERVER_ERROR;
   let message = messages.ERROR.INTERNAL_SERVER_ERROR;
   let errorType = 'ServerError';

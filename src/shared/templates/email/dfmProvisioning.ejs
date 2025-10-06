@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Download Flow Validation Report</title>
+    <title>DFM Provisioning Successfull Email</title>
     <link
       href="https://fonts.googleapis.com/css?family=Red+Hat+Display:400,600,700&display=swap"
       rel="stylesheet"
@@ -87,7 +87,7 @@
                   margin: 0 0 20px;
                 "
               >
-                Hi John Doe,
+                Hi <%= username %>
               </h2>
 
               <h3
@@ -127,18 +127,18 @@
               </h3>
               <div style="margin-bottom: 15px">
                 <span style="font-weight: 700; color: #444445">DFM Url: </span>
-                <span>http://abc.com</span>
+                <span><%= dfmUrl %></span>
               </div>
               <table style="margin-bottom: 16px">
                 <tbody>
                   <tr>
                     <td>
                       <div>Username</div>
-                      <div>system.com</div>
+                      <div><%= dfmUsername %></div>
                     </td>
                     <td>
                       <div>Password</div>
-                      <div>sys.password</div>
+                      <div><%= dfmPassword%></div>
                     </td>
                   </tr>
                 </tbody>
@@ -161,7 +161,7 @@
                 <span style="font-weight: 700; color: #444445">
                   NiFi Url-1 :</span
                 >
-                <span> http://nifi1.com </span>
+                <span> <%= nifi1Url %> </span>
               </div>
               <table
                 style="
@@ -174,11 +174,11 @@
                   <tr>
                     <td>
                       <div>Username</div>
-                      <div>system.com</div>
+                      <div><%= nifi1Username %></div>
                     </td>
                     <td>
                       <div>Password</div>
-                      <div>sys.password</div>
+                      <div><%= nifi1Password %></div>
                     </td>
                   </tr>
                 </tbody>
@@ -199,18 +199,18 @@
                 <span style="font-weight: 700; color: #444445">
                   NiFi Url-2 :</span
                 >
-                <span> http://nifi1.com </span>
+                <span> <%= nifi2Url %> </span>
               </div>
               <table style="text-align: center">
                 <tbody>
                   <tr>
                     <td>
                       <div>Username</div>
-                      <div>system.com</div>
+                      <div><%= nifi2Username %></div>
                     </td>
                     <td>
                       <div>Password</div>
-                      <div>sys.password</div>
+                      <div><%= nifi2Password %></div>
                     </td>
                   </tr>
                 </tbody>
@@ -226,7 +226,7 @@
                   <tr>
                     <td colspan="3">
                       <div>Registry Url</div>
-                      <div>http://nifi-registry.com</div>
+                      <div><%= registryUrl %></div>
                     </td>
                   </tr>
                 </tbody>

@@ -7,8 +7,7 @@ import { errorMiddleware } from './shared/errors/index.js';
 import logger from './shared/logger/index.js';
 import { endpoints } from './shared/constants/index.js';
 
-import './services/scheduler/trialReminder.js';
-import TrialReminderService from './services/scheduler/trialReminder.js';
+import TrialReminderService from './services/scheduler/trialReminderSchedule.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

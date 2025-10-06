@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Download Flow Validation Report</title>
+    <title>Trial Reminder</title>
     <link
       href="https://fonts.googleapis.com/css?family=Red+Hat+Display:400,600,700&display=swap"
       rel="stylesheet"
@@ -51,21 +51,17 @@
         <tr style="height: 90px">
           <td style="width: 25%; text-align: left; padding: 20px">
             <img
-              src="/icons/frame.png"
+              src="<%= frame %>"
               alt="frame"
               style="height: 80px; opacity: 0.6"
             />
           </td>
           <td style="width: 50%; text-align: center; padding: 20px">
-            <img
-              src="/icons/DFM-logo.png"
-              alt="dfm logo"
-              style="height: 40px"
-            />
+            <img src="<%= logoUrl %>" alt="dfm logo" style="height: 40px" />
           </td>
           <td style="width: 25%; text-align: right; padding: 20px">
             <img
-              src="/icons/frame.png"
+              src="<%= frame %>"
               alt="frame"
               style="height: 80px; opacity: 0.6"
             />
@@ -91,7 +87,7 @@
                   margin: 0 0 20px;
                 "
               >
-                Hi John Doe
+                Hi <%= userName %>
               </h2>
 
               <h3
@@ -103,7 +99,7 @@
                   margin: 0 0 12px;
                 "
               >
-                Your DFM is ready to be used
+                Your trial is about to expire in <%= daysLeft %> days
               </h3>
             </div>
           </td>
