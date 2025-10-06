@@ -1,74 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trial Expiry Notification</title>
+    <title>Download Flow Validation Report</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Red+Hat+Display:400,600,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./css/main.css" rel="stylesheet" />
     <style>
-      body {
+      /* Inline styles for email compatibility */
+      body,
+      html {
         margin: 0;
-        font-family: 'Red Hat Display', sans-serif;
+        padding: 0;
+        font-family: 'Red Hat Display', 'Poppins', sans-serif;
       }
 
-      .notification-section {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        padding: 40px;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+      table {
+        border-collapse: collapse;
+        width: 100%;
       }
 
-      .notification-content {
-        text-align: center;
-        position: relative;
-        color: #444445;
-      }
-
-      .dfm-logo {
-        display: block;
-        margin: 0 auto;
-        max-width: 200px; /* Adjust size based on the actual logo dimensions */
-      }
-
-      .notification-content .title {
-        font-weight: 700;
-        font-style: bold;
-        font-size: 32px;
-        line-height: 1.5;
-        letter-spacing: 0px;
-        margin-bottom: 16px;
-      }
-
-      .notification-content .text {
-        font-weight: 600;
-        font-style: semi-bold;
-        font-size: 20px;
-        line-height: 1;
-        letter-spacing: 0px;
-      }
-
-      .bottom-message {
-        position: absolute;
-        bottom: 40px;
-        left: 50%;
-        transform: translateX(-50%);
+      td {
+        padding: 0;
       }
     </style>
   </head>
+
   <body>
-    <section class="notification-section">
-      <div class="notification-content">
-        <img class="dfm-logo" src="<%= logoUrl %>" alt="DFM Logo" />
-        <div class="bottom-message">
-          <div class="title">Hi <%= userName %></div>
-          <div class="text">
-            Your trial is about to expire in <%= daysLeft %> days
-          </div>
-        </div>
-      </div>
-    </section>
+    <table
+      align="center"
+      width="600"
+      border="0"
+      cellspacing="0"
+      cellpadding="0"
+      style="
+        background: #fff7ed;
+        width: 600px;
+        border-radius: 8px;
+        overflow: hidden;
+      "
+    >
+      <tbody>
+        <!-- Header row -->
+        <tr style="height: 90px">
+          <td style="width: 25%; text-align: left; padding: 20px">
+            <img
+              src="/icons/frame.png"
+              alt="frame"
+              style="height: 80px; opacity: 0.6"
+            />
+          </td>
+          <td style="width: 50%; text-align: center; padding: 20px">
+            <img
+              src="/icons/DFM-logo.png"
+              alt="dfm logo"
+              style="height: 40px"
+            />
+          </td>
+          <td style="width: 25%; text-align: right; padding: 20px">
+            <img
+              src="/icons/frame.png"
+              alt="frame"
+              style="height: 80px; opacity: 0.6"
+            />
+          </td>
+        </tr>
+
+        <!-- Content row -->
+        <tr>
+          <td colspan="3" style="">
+            <div
+              style="
+                background: white;
+                border-radius: 49% 49% 0 0;
+                padding: 55px 30px 40px;
+                text-align: center;
+              "
+            >
+              <h2
+                style="
+                  font-size: 32px;
+                  font-weight: 700;
+                  color: #444445;
+                  margin: 0 0 20px;
+                "
+              >
+                Hi John Doe
+              </h2>
+
+              <h3
+                style="
+                  font-size: 20px;
+                  font-weight: 600;
+                  line-height: 1.3;
+                  color: #444445;
+                  margin: 0 0 12px;
+                "
+              >
+                Your DFM is ready to be used
+              </h3>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </body>
 </html>
