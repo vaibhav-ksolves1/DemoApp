@@ -15,7 +15,7 @@ export default class RegistrationController {
   }
 
   // Register a new user
-  register = asyncHandler(async (req, res) => {
+  register = asyncHandler(async (req, res, next) => {
     const registration = await this.registrationService.register(req.body);
     return sendSuccessResponse({
       response: res,

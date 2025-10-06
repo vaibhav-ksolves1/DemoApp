@@ -4,6 +4,7 @@ import ejs from 'ejs';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from '../../shared/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,8 +41,11 @@ export default class MailService {
     const html = await ejs.renderFile(templatePath, {
       userName: username,
       dfmUrl: dfmUrl,
-      username: 'system.administrator@dfm.com',
-      password: 'systemadmin@dfm',
+      username: process.env.DFM_DEFAULT_ADMIN_USER || 'admin',
+      password: process.env.DFM_DEFAULT_ADMIN_PASS || 'admin@123',
+      logoUrl: '/icons/logo.png',
+      nifiUsername: process.env.NIFI_DEFAULT_ADMIN_USER || 'admin',
+      nifiPassword: process.env.NIFI_DEFAULT_ADMIN_PASS || 'adminpass1234',
       nifi1Url: nifiUrl1,
       nifi2Url: nifiUrl2,
       registryUrl: registryUrl,
@@ -61,7 +65,7 @@ export default class MailService {
     });
   }
 
-  async sendTrialReminder(email, daysLeft) {
+  async sendTrialReminder({ userName, email, daysLeft }) {
     try {
       // Path to EJS template for trial reminder
       const templatePath = path.join(
@@ -74,6 +78,7 @@ export default class MailService {
         daysLeft,
         year: new Date().getFullYear(),
         logoUrl: '/icons/logo.png',
+        userName,
       });
 
       // Send the email
