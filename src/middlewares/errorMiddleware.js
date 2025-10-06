@@ -5,13 +5,11 @@ import {
   ServerError,
   SQLError,
 } from '../shared/errors/customErrors.js';
-
+import { httpCodes, messages } from '../shared/constants/index.js';
 export default function errorMiddleware(err, req, res, next) {
-  let statusCode = 500;
-  let message = 'Internal server error';
+  let statusCode = httpCodes.INTERNAL_SERVER_ERROR;
+  let message = messages.ERROR.INTERNAL_SERVER_ERROR;
   let errorType = 'ServerError';
-
-  console.log(err)
   if (
     err instanceof AuthError ||
     err instanceof ClientError ||
@@ -23,7 +21,7 @@ export default function errorMiddleware(err, req, res, next) {
     errorType = err.name;
   } else if (err.name === 'SequelizeUniqueConstraintError') {
     statusCode = 400;
-    message = 'Duplicate entry detected';
+    message = messages.ERROR.DUPLICATE_ENTRY;
     errorType = 'SequelizeUniqueConstraintError';
   } else if (err.name === 'SequelizeValidationError') {
     statusCode = 400;

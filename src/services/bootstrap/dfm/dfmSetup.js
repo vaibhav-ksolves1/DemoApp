@@ -1,99 +1,71 @@
-/*
-This file contains code for setting up clusters, registries, and their associations on DFM.
-*/
-
-import { name } from 'ejs';
-import createDfmClient from '../../../shared/axios/dfmClient.js';
-
 import { dfmEndpoint } from '../../../shared/constants/endpoints.js';
 
-/**
- * Get DFM login token
- * @param {Object} param0
- * @param {string} param0.dfmUrl - DFM instance URL
- * @param {string} param0.email - User email
- * @param {string} param0.password - User password
- */
-export const getLoginToken = async ({ dfmUrl, email, password, dfmClient }) => {
-  const res = await dfmClient.post(`${dfmUrl}${dfmEndpoint.LOGIN}`, {
-    email: email || process.env.DFM_DEFAULT_ADMIN_USER,
-    password: password || process.env.DFM_DEFAULT_ADMIN_PASS,
-  });
-  return res.token; // should include token
-};
+export class DfmService {
+  constructor({ dfmUrl, dfmClient, email, password }) {
+    this.dfmUrl = dfmUrl;
+    this.dfmClient = dfmClient;
+    this.email = email || process.env.DFM_DEFAULT_ADMIN_USER;
+    this.password = password || process.env.DFM_DEFAULT_ADMIN_PASS;
+    this.token = null;
+  }
 
-/**
- * Create a cluster on DFM
- * @param {Object} payload - Cluster payload
- * @param {string} token - Bearer token
- */
-export const createCluster = async input => {
-  const { dfmUrl, nifiUrl, clusterName, token, registryId, dfmClient } = input;
-  const payload = {
-    name: clusterName,
-    nifi_url: nifiUrl,
-    registry_id: registryId,
-    tag: '',
-    notification_enable: false,
-    approver_enable: false,
-    start_stop_requires_approval: false,
-    change_request_enable: false,
-  };
+  async login() {
+    const res = await this.dfmClient.post(
+      `${this.dfmUrl}${dfmEndpoint.LOGIN}`,
+      {
+        email: this.email,
+        password: this.password,
+      }
+    );
+    this.token = res.token;
+    return this.token;
+  }
 
-  const res = await dfmClient.post(
-    `${dfmUrl}${dfmEndpoint.ADD_CLUSTER}`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  return res.data;
-};
+  async createCluster({ nifiUrl, clusterName, registryId }) {
+    if (!this.token) throw new Error('Not authenticated. Call login() first.');
 
-/**
- * Create a registry on DFM
- * @param {Object} payload - Registry payload
- * @param {string} token - Bearer token
- */
-export const createRegistry = async input => {
-  const { dfmUrl, token, dfmClient, registryUrl } = input;
+    const payload = {
+      name: clusterName,
+      nifi_url: nifiUrl,
+      registry_id: registryId,
+      tag: '',
+      notification_enable: false,
+      approver_enable: false,
+      start_stop_requires_approval: false,
+      change_request_enable: false,
+    };
 
-  const payload = {
-    name: 'Trial Registry',
-    is_registry_authenticated: false,
-    registry_url: registryUrl,
-  };
-  const res = await dfmClient.post(
-    `${dfmUrl}${dfmEndpoint.ADD_REGISTRY}`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-  return res.id;
-};
+    const res = await this.dfmClient.post(
+      `${this.dfmUrl}${dfmEndpoint.ADD_CLUSTER}`,
+      payload,
+      {
+        headers: { Authorization: `Bearer ${this.token}` },
+      }
+    );
 
-// /**
-//  * Associate a cluster with a registry
-//  * @param {string} clusterId - Cluster ID
-//  * @param {Object} payload - Association payload
-//  * @param {string} token - Bearer token
-//  */
-// export const associateCluster = async (clusterId, payload, token) => {
-//   const res = await dfmClient.post(
-//     `/clusters/${clusterId}/associate`,
-//     payload,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         'Content-Type': 'application/json',
-//       },
-//     }
-//   );
-//   return res.data;
-// };
+    return res.data;
+  }
+
+  async createRegistry({ registryUrl }) {
+    if (!this.token) throw new Error('Not authenticated. Call login() first.');
+
+    const payload = {
+      name: 'Trial Registry',
+      is_registry_authenticated: false,
+      registry_url: registryUrl,
+    };
+
+    const res = await this.dfmClient.post(
+      `${this.dfmUrl}${dfmEndpoint.ADD_REGISTRY}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return res.id;
+  }
+}

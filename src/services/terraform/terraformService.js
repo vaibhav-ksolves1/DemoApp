@@ -1,3 +1,5 @@
+/* The TerraformService class is responsible for provisioning infrastructure for registrations,
+utilizing Terraform commands and sending emails upon successful setup. */
 import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
@@ -8,6 +10,8 @@ import { fileURLToPath } from 'url';
 import MailService from '../email/mailService.js';
 import Registration from '../../database/models/Registration.js';
 import { bootstrap } from '../bootstrap/index.js';
+import { logger } from '../../shared/index.js';
+import TrialReminderService from '../scheduler/trialReminder.js';
 
 const execAsync = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -24,30 +28,33 @@ export default class TerraformService {
     const registrationDir = path.join(this.infraDir, String(registrationId));
 
     try {
-      console.log(`Provisioning infra for registration ${registrationId}`);
+      logger.info(`Provisioning infra for registration ${registrationId}`);
 
       // Ensure folder exists
       if (!fs.existsSync(registrationDir)) {
         fs.mkdirSync(registrationDir, { recursive: true });
-        console.log(`Created infra folder for registration ${registrationId}`);
+        logger.debug('Created infra folder for registration', {
+          registrationId,
+        });
       }
 
-      // Copy all base module files
+      // Copy base module files
       for (const file of fs.readdirSync(this.baseDir)) {
-        const src = path.join(this.baseDir, file);
-        const dest = path.join(registrationDir, file);
-        fs.copyFileSync(src, dest);
+        fs.copyFileSync(
+          path.join(this.baseDir, file),
+          path.join(registrationDir, file)
+        );
       }
 
-      // Generate dynamic root main.tf
+      // Write main.tf
       const mainTf = `
   module "registration_infra" {
     source          = "${this.baseDir.replace(/\\/g, '/')}"
     registration_id = "${registrationId}"
     user_domain     = var.user_domain      
-    aws_access_key  = var.aws_access_key
-    aws_secret_key  = var.aws_secret_key
-    aws_session_token = var.aws_session_token
+    // aws_access_key  = var.aws_access_key
+    // aws_secret_key  = var.aws_secret_key
+    // aws_session_token = var.aws_session_token
   }
 
   # Re-export module outputs so terraform output -json works
@@ -70,104 +77,85 @@ output "nifi_registry_url" {
   description = "Public IP of the server"
 }
   
-  `;
+  `; // your existing mainTf content
       fs.writeFileSync(path.join(registrationDir, 'main.tf'), mainTf);
 
       const registration = await Registration.findByPk(registrationId);
-      console.log('Registration ', registration);
-      // Helper to run Terraform commands
+      if (!registration)
+        throw new Error(`Registration not found for ID ${registrationId}`);
+
       const runTerraform = async cmd => {
-        console.log(`Running terraform ${cmd}...`);
-        try {
-          const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
-            cwd: registrationDir,
-            env: { ...process.env },
-            maxBuffer: 1024 * 1024, // 1 MB
-          });
-          if (stderr) console.log('Terraform info:', stderr);
-          return stdout;
-        } catch (err) {
-          console.error('Terraform command failed:', err);
-          throw err;
-        }
-      };
-      const username =
-        registration?.dataValues?.name.toLowerCase().trim()?.replace(' ', '') ||
-        `demo${registrationId}`;
-      console.log('USERNAME:           ;', username);
-      // Run Terraform workflow
-      await runTerraform('init -input=false');
-      await runTerraform(
-        `plan -input=false -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
-      );
-      await runTerraform(
-        `apply -input=false -auto-approve -var-file="aws_creds.tfvars" -var="user_domain=${username}"`
-      );
-
-      // Get outputs as JSON
-      // Get outputs as JSON
-      const outputJson = await runTerraform('output -json');
-      let dfmUrl = '';
-      let nifiUrl1 = '';
-      let nifiUrl2 = '';
-      let registryUrl = '';
-      console.log('OUTTTT;', outputJson);
-      try {
-        const outputs = JSON.parse(outputJson);
-        if (outputs.dfm_url?.value) {
-          dfmUrl = outputs.dfm_url.value;
-        } else {
-          console.warn(
-            'dfm_url not found in Terraform outputs, using fallback'
-          );
-          dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
-        }
-        if (outputs) {
-          nifiUrl1 = outputs.nifi_0_url.value + '/nifi';
-          nifiUrl2 = outputs.nifi_1_url.value + '/nifi';
-          registryUrl = outputs.nifi_registry_url.value + '/nifi-registry';
-        }
-        console.log('ddd NiFi URL:', outputs);
-        console.log('DFM URL:', dfmUrl);
-      } catch (err) {
-        console.warn('Could not parse terraform outputs JSON:', err);
-        dfmUrl = `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
-      }
-
-      await bootstrap({ nifiUrl1, nifiUrl2, dfmUrl, registryUrl });
-      // Update registration and send email
-      if (registration) {
-        await registration.update({ infra_setup_done: true });
-
-        await this.mailService.sendInstanceReadyMail({
-          to: registration.email,
-          username: registration?.dataValues?.name,
-          // dfmUrl: 'www.avc',
-          dfmUrl,
-          // nifi1Url: 'nifiUrl1',
-          nifiUrl1: nifiUrl1,
-          // nifi2Url: 'nifiUrl2',
-          nifiUrl2: nifiUrl2,
-          registryUrl,
-          // registryUrl: 'registryUrl',
-          registrationId,
-          registration,
+        const { stdout, stderr } = await execAsync(`terraform ${cmd}`, {
+          cwd: registrationDir,
+          env: { ...process.env },
+          maxBuffer: 1024 * 1024,
         });
+        if (stderr) logger.warn('Terraform warning', { cmd, stderr });
+        return stdout;
+      };
 
-        console.log(
-          `Email sent to ${registration.email} with DFM URL: ${dfmUrl}`
-        );
-      } else {
-        console.warn(`Registration with ID ${registrationId} not found`);
-      }
+      const username = registration.dataValues.name
+        ? registration.dataValues.name.toLowerCase().trim().replace(' ', '')
+        : `demo${registrationId}`;
+
+      // Terraform workflow
+      await runTerraform('init -input=false');
+      await runTerraform(`plan -input=false -var="user_domain=${username}"`);
+      await runTerraform(
+        `apply -input=false -auto-approve -var="user_domain=${username}"`
+      );
+
+      const outputJson = await runTerraform('output -json');
+      const outputs = JSON.parse(outputJson);
+
+      const dfmUrl =
+        outputs.dfm_url?.value ||
+        `http://ec2-instance-${registrationId}.amazonaws.com:8443`;
+      const nifiUrl1 = outputs.nifi_0_url?.value
+        ? outputs.nifi_0_url.value + '/nifi'
+        : '';
+      const nifiUrl2 = outputs.nifi_1_url?.value
+        ? outputs.nifi_1_url.value + '/nifi'
+        : '';
+      const registryUrl = outputs.nifi_registry_url?.value
+        ? outputs.nifi_registry_url.value + '/nifi-registry'
+        : '';
+
+      logger.debug('Outputs:', outputs);
+      await bootstrap({ nifiUrl1, nifiUrl2, dfmUrl, registryUrl });
+
+      // ✅ Only update DB and send email if everything above succeeds
+      await registration.update({ infra_setup_done: true });
+
+      await this.mailService.sendInstanceReadyMail({
+        to: registration.email,
+        username: registration.dataValues.name,
+        dfmUrl,
+        nifiUrl1,
+        nifiUrl2,
+        registryUrl,
+        registrationId,
+        registration,
+      });
+
+      logger.info('Email sent to :email with DFM URL :dfmUrl', {
+        email: registration.email,
+        dfmUrl,
+      });
+
+      // Schedule trial reminders for new registrations
+      new TrialReminderService();
 
       return dfmUrl;
-      // return;
     } catch (err) {
-      console.error(
-        `Terraform failed for registration ${registrationId}:`,
-        err.stderr || err
+      logger.error(
+        'Terraform provisioning failed for registration :registrationId',
+        {
+          registrationId,
+          error: err.stderr || err,
+        }
       );
+      // ✅ Do NOT send any email if error occurs
       throw err;
     }
   }

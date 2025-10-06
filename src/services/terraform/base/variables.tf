@@ -4,23 +4,23 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
-variable "aws_access_key" {
-  description = "AWS access key"
-  type        = string
-  sensitive   = true
-}
+# variable "aws_access_key" {
+#   description = "AWS access key"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "aws_secret_key" {
-  description = "AWS secret key"
-  type        = string
-  sensitive   = true
-}
+# variable "aws_secret_key" {
+#   description = "AWS secret key"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "aws_session_token" {
-  description = "AWS session token"
-  type        = string
-  sensitive   = true
-}
+# variable "aws_session_token" {
+#   description = "AWS session token"
+#   type        = string
+#   sensitive   = true
+# }
 
 variable "subnet_id" {
   description = "SUBNET ID"
@@ -37,7 +37,7 @@ variable "ec2_instance_type" {
 variable "dfm_ami" {
   description = "DFM AMI ID"
   type        = string
-  default     = "ami-00138555b11942122"
+  default     = "ami-07e034b63665f9b13"
 }
 
 variable "ec2_volume_size" {

@@ -1,4 +1,5 @@
 // shared/utils/responseHandler.js
+import { isEmpty } from 'lodash-es';
 import { httpCodes, messages } from '../constants/index.js';
 
 /**
@@ -20,8 +21,9 @@ export const sendSuccessResponse = ({
   const json = {
     status: messages.APP.SUCCESS,
     message: responseMessage || messages.APP.SUCCESS_RESULT,
-    data: responseData,
   };
+
+  if (!isEmpty(responseData)) json.data = responseData;
 
   if (count !== undefined) json.count = count;
 
@@ -48,8 +50,5 @@ export const sendErrorResponse = ({
   });
 };
 
-/**
- * Optional helper: wrap async controllers to handle errors automatically
- */
 export const asyncHandler = fn => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
