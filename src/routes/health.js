@@ -2,7 +2,6 @@ import express from 'express';
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  console.log('qqq')
   return sendSuccessResponse({
     response: res,
     responseMessage: 'APP is running.',

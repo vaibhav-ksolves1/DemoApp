@@ -8,6 +8,7 @@ import logger from './shared/logger/index.js';
 import { endpoints } from './shared/constants/index.js';
 
 import './services/scheduler/trialReminder.js';
+import TrialReminderService from './services/scheduler/trialReminder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,7 @@ export default class App {
 
   start() {
     this.app.listen(this.port, () => {
+      new TrialReminderService();
       logger.info(`Server running on  http://localhost:${this.port}`);
     });
   }

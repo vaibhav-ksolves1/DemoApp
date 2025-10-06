@@ -16,7 +16,7 @@ nifi_1_domain="${user_domain}-nifi-1.cloud.dfmanager.com"
 nifi_registry_domain="${user_domain}-nifi-registry.cloud.dfmanager.com"
 NIFI_API_0="https://$nifi_0_domain:9443/nifi-api"
 NIFI_API_1="https://$nifi_1_domain:9445/nifi-api"
-REGISTRY_URL="https://$nifi_registry_domain:18443"
+REGISTRY_URL="http://$nifi_registry_domain:18443"
 
 # --- NiFi credentials ---
 NIFI_USER="${nifi_user}"
@@ -45,7 +45,8 @@ systemctl stop nifi-registry || true
 # --- Request SSL certs for all services ---
 for d in "$domain_name" "$nifi_0_domain" "$nifi_1_domain" "$nifi_registry_domain"; do
   echo "==> Requesting SSL certificate for $d"
-  certbot certonly --standalone -d "$d" --non-interactive --agree-tos -m admin@"$d"
+  certbot certonly --standalone --cert-name cloud.dfmanager.com -d "$d" --non-interactive --agree-tos -m admin@"$d"
+  
 done
 
 # --- Secure permissions ---
@@ -156,27 +157,27 @@ configure_nifi_registry_ssl() {
   chmod 640 "$HOME/keystore.p12" "$HOME/truststore.jks"
 
   # Disable HTTP and enable HTTPS
-  update_env_var "nifi.registry.web.http.host" "" "$CONF_FILE"
-  update_env_var "nifi.registry.web.http.port" "" "$CONF_FILE"
-  update_env_var "nifi.registry.web.https.host" "0.0.0.0" "$CONF_FILE"
-  update_env_var "nifi.registry.web.https.port" "18443" "$CONF_FILE"
+  update_env_var "nifi.registry.web.https.host" "" "$CONF_FILE"
+  update_env_var "nifi.registry.web.https.port" "" "$CONF_FILE"
+  update_env_var "nifi.registry.web.http.host" "0.0.0.0" "$CONF_FILE"
+  update_env_var "nifi.registry.web.http.port" "18443" "$CONF_FILE"
   
   # SSL Configuration
-  update_env_var "nifi.registry.security.keystore" "$HOME/keystore.p12" "$CONF_FILE"
-  update_env_var "nifi.registry.security.keystoreType" "PKCS12" "$CONF_FILE"
-  update_env_var "nifi.registry.security.keystorePasswd" "$PASSWORD" "$CONF_FILE"
-  update_env_var "nifi.registry.security.keyPasswd" "$PASSWORD" "$CONF_FILE"
-  update_env_var "nifi.registry.security.truststore" "$HOME/truststore.jks" "$CONF_FILE"
-  update_env_var "nifi.registry.security.truststoreType" "JKS" "$CONF_FILE"
-  update_env_var "nifi.registry.security.truststorePasswd" "$PASSWORD" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.keystore" "$HOME/keystore.p12" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.keystoreType" "PKCS12" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.keystorePasswd" "$PASSWORD" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.keyPasswd" "$PASSWORD" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.truststore" "$HOME/truststore.jks" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.truststoreType" "JKS" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.truststorePasswd" "$PASSWORD" "$CONF_FILE"
   
   # Additional SSL settings for proper certificate handling
   update_env_var "nifi.registry.security.needClientAuth" "false" "$CONF_FILE"
-  update_env_var "nifi.registry.security.authorizer" "managed-authorizer" "$CONF_FILE"
+  # update_env_var "nifi.registry.security.authorizer" "managed-authorizer" "$CONF_FILE"
   
   # Ensure HTTP is completely disabled
-  sed -i "s|^nifi.registry.web.http.host=.*|nifi.registry.web.http.host=|" "$CONF_FILE"
-  sed -i "s|^nifi.registry.web.http.port=.*|nifi.registry.web.http.port=|" "$CONF_FILE"
+  # sed -i "s|^nifi.registry.web.http.host=.*|nifi.registry.web.http.host=|" "$CONF_FILE"
+  # sed -i "s|^nifi.registry.web.http.port=.*|nifi.registry.web.http.port=|" "$CONF_FILE"
 }
 
 # --- Apply SSL to NiFi Registry ---
@@ -200,7 +201,7 @@ configure_nifi_registry_client_ssl() {
   local HTTPS_PORT=$3
   local PASSWORD=$4
   local CONF_FILE="$NIFI_HOME/conf/nifi.properties"
-  local REGISTRY_URL="https://$REGISTRY_DOMAIN:$HTTPS_PORT"
+  local REGISTRY_URL="http://$REGISTRY_DOMAIN:$HTTPS_PORT"
 
   # Import Registry cert into NiFi truststore
   keytool -import -trustcacerts -alias registry-ca \
@@ -230,14 +231,14 @@ sleep 10
 echo "[registry-check] Verifying registry service status"
 systemctl status nifi-registry --no-pager -l | head -10 || echo "[registry-check] Service status check failed"
 
-echo "[registry-check] Testing registry SSL connectivity"
-curl -k -s -o /dev/null --connect-timeout 10 --max-time 15 -w "HTTP Code: %%{http_code}\n" "https://$nifi_registry_domain:18443/nifi-registry" || echo "[registry-check] Registry SSL test failed"
+# echo "[registry-check] Testing registry SSL connectivity"
+# curl -k -s -o /dev/null --connect-timeout 10 --max-time 15 -w "HTTP Code: %%{http_code}\n" "http://$nifi_registry_domain:18443/nifi-registry" || echo "[registry-check] Registry SSL test failed"
 
 # Basic SSL check
-echo "[ssl-check] Testing certificate validity:"
-openssl x509 -in "/etc/letsencrypt/live/$nifi_registry_domain/fullchain.pem" -text -noout | grep -E "(Subject:|Not After)" || echo "[ssl-check] Certificate check failed"
-
-sleep 10
+# echo "[ssl-check] Testing certificate validity:"
+# openssl x509 -in "/etc/letsencrypt/live/$nifi_registry_domain/fullchain.pem" -text -noout | grep -E "(Subject:|Not After)" || echo "[ssl-check] Certificate check failed"
+# # 
+# sleep 10
 
 # --- Configure NiFi nodes to connect securely to Registry via API ---
 echo "==> Configuring NiFi nodes to connect securely to Registry via API"
@@ -270,12 +271,12 @@ configure_nifi_registry_api() {
     || echo "[nifi-api] WARN: Registry client creation failed"
 
   # Create SSL Context Controller Service
-  echo "[nifi-api] Creating SSL Context Controller Service"
-  curl -sS -k --fail --connect-timeout 5 --max-time 30 -X POST "$${NIFI_API}/process-groups/root/controller-services" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H 'Content-Type: application/json' \
-    -d "{\"component\":{\"name\":\"RegistrySSLContext\",\"type\":\"org.apache.nifi.ssl.StandardRestrictedSSLContextService\",\"parentGroupId\":\"root\",\"properties\":{\"Keystore Filename\":\"$HOME/keystore.p12\",\"Keystore Type\":\"PKCS12\",\"Keystore Password\":\"$PASS\",\"key-password\":\"$PASS\",\"Truststore Filename\":\"$HOME/truststore.jks\",\"Truststore Type\":\"JKS\",\"Truststore Password\":\"$PASS\"}},\"revision\":{\"version\":0}}" \
-    || echo "[nifi-api] WARN: Creating SSL context service may have failed (continuing)"
+  # echo "[nifi-api] Creating SSL Context Controller Service"
+  # curl -sS -k --fail --connect-timeout 5 --max-time 30 -X POST "$${NIFI_API}/process-groups/root/controller-services" \
+  #   -H "Authorization: Bearer $TOKEN" \
+  #   -H 'Content-Type: application/json' \
+  #   -d "{\"component\":{\"name\":\"RegistrySSLContext\",\"type\":\"org.apache.nifi.ssl.StandardRestrictedSSLContextService\",\"parentGroupId\":\"root\",\"properties\":{\"Keystore Filename\":\"$HOME/keystore.p12\",\"Keystore Type\":\"PKCS12\",\"Keystore Password\":\"$PASS\",\"key-password\":\"$PASS\",\"Truststore Filename\":\"$HOME/truststore.jks\",\"Truststore Type\":\"JKS\",\"Truststore Password\":\"$PASS\"}},\"revision\":{\"version\":0}}" \
+  #   || echo "[nifi-api] WARN: Creating SSL context service may have failed (continuing)"
 }
 
 # Wait until NiFi API is ready
@@ -353,37 +354,37 @@ wait_for_registry_api() {
 }
 
 # Test NiFi Registry API with certificate authentication
-configure_registry_api_cert() {
-  local REGISTRY_URL="$1"
-  local PASS="$2"
+# configure_registry_api_cert() {
+#   local REGISTRY_URL="$1"
+#   local PASS="$2"
   
-  HTTP_CODE=$(curl -k -s -o /dev/null --connect-timeout 5 --max-time 10 -w "%%{http_code}" \
-    --cert-type P12 --cert "/opt/nifi-registry/keystore.p12:$PASS" \
-    --cacert "/etc/letsencrypt/live/$nifi_registry_domain/fullchain.pem" \
-    "$REGISTRY_URL/nifi-registry-api/access/token" || echo "000")
+#   HTTP_CODE=$(curl -k -s -o /dev/null --connect-timeout 5 --max-time 10 -w "%%{http_code}" \
+#     --cert-type P12 --cert "/opt/nifi-registry/keystore.p12:$PASS" \
+#     --cacert "/etc/letsencrypt/live/$nifi_registry_domain/fullchain.pem" \
+#     "$REGISTRY_URL/nifi-registry-api/access/token" || echo "000")
     
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "405" ]; then
-    echo "[registry-api] Certificate auth OK (HTTP $HTTP_CODE)"
-    return 0
-  else
-    echo "[registry-api] Certificate auth failed (HTTP $HTTP_CODE)"
-    return 1
-  fi
-}
+#   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "405" ]; then
+#     echo "[registry-api] Certificate auth OK (HTTP $HTTP_CODE)"
+#     return 0
+#   else
+#     echo "[registry-api] Certificate auth failed (HTTP $HTTP_CODE)"
+#     return 1
+#   fi
+# }
 
 # Try to wait for registry, but don't fail if it's not ready
-echo "==> Attempting to configure registry connections"
-if wait_for_registry_api "$REGISTRY_URL"; then
-  echo "[registry-api] Registry is ready, proceeding with API configuration"
+# echo "==> Attempting to configure registry connections"
+# if wait_for_registry_api "$REGISTRY_URL"; then
+#   echo "[registry-api] Registry is ready, proceeding with API configuration"
   
-  # Test certificate authentication
-  configure_registry_api_cert "$REGISTRY_URL" "$NIFI_PASS"
+#   # Test certificate authentication
+#   configure_registry_api_cert "$REGISTRY_URL" "$NIFI_PASS"
   
-  configure_nifi_registry_api "$NIFI_API_0" "$REGISTRY_URL" "$NIFI_USER" "$NIFI_PASS" "/opt/nifi-registry"
-  configure_nifi_registry_api "$NIFI_API_1" "$REGISTRY_URL" "$NIFI_USER" "$NIFI_PASS" "/opt/nifi-registry"
-else
-  echo "[registry-api] WARN: Registry not ready, skipping API configuration"
-fi
+configure_nifi_registry_api "$NIFI_API_0" "$REGISTRY_URL" "$NIFI_USER" "$NIFI_PASS" "/opt/nifi-registry"
+configure_nifi_registry_api "$NIFI_API_1" "$REGISTRY_URL" "$NIFI_USER" "$NIFI_PASS" "/opt/nifi-registry"
+# else
+#   echo "[registry-api] WARN: Registry not ready, skipping API configuration"
+# fi
 
 # --- Restart all services ---
 echo "==> Restarting all services"

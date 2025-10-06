@@ -17,6 +17,7 @@ export class ClientError extends Error {
 
 export class ServerError extends Error {
   constructor(message = 'Internal server error') {
+    console.log('q');
     super(message);
     this.name = 'ServerError';
     this.statusCode = 500;
